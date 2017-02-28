@@ -134,16 +134,11 @@ public class LoginActivity extends AppCompatActivity {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            /**To-Do */
-
-            if ((username.equals("ctos") && (password.equals("ctos"))) || (username.equals("rtos") && (password.equals("rtos")))) {
-                Intent i = new Intent(this,MainActivity.class);
-                i.putExtra("username",username);
-                i.putExtra("password",password);
-                startActivity(i);
-                finish();
-            }
-
+            Intent i = new Intent(this, MainActivity.class);
+            i.putExtra("username", username);
+            i.putExtra("password", password);
+            startActivity(i);
+            finish();
         }
     }
 
@@ -185,7 +180,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private boolean isUsernameValid(String username) {
         //TODO: Replace this with your own logic
-        return username.length()>3;
+        return username.length() > 3;
     }
 
     private boolean isPasswordValid(String password) {

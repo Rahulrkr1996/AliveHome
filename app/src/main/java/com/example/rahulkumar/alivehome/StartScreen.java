@@ -1,7 +1,9 @@
 package com.example.rahulkumar.alivehome;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -49,6 +51,21 @@ public class StartScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_screen);
+
+
+        SharedPreferences sharedPreferences = getSharedPreferences("start_screen_info", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        boolean started_once = sharedPreferences.getBoolean("started_once",false);
+
+        if(started_once==false){
+            editor.putBoolean("started_once",true);
+            editor.apply();
+        }else {
+            Intent i = new Intent(StartScreen.this,LoginActivity.class);
+            startActivity(i);
+            finish();
+        }
+
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
