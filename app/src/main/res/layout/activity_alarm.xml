@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_alarm"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.rahulkumar.alivehome.AlarmActivity">
+
+    <RelativeLayout
+        android:id="@+id/alarm_UI"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="20dp"
+        android:padding="10dp">
+
+        <TimePicker
+            android:id="@+id/alarm_selector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:foregroundGravity="center_vertical|center_horizontal|center"
+            android:headerBackground="@color/colorPrimaryDark"
+            android:numbersSelectorColor="@color/colorPrimaryDark"
+            android:padding="5dp" />
+
+        <Button
+            android:id="@+id/alarm_set_alarm"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:layout_below="@+id/alarm_selector"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/rectangle"
+            android:backgroundTint="@color/colorPrimaryDark"
+            android:elevation="10dp"
+            android:text="Schedule The Alarm"
+            android:textColor="@color/colorPrimaryDark" />
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/alarm_set_alarm"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="10dp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/alarm_appliance_prompt"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#e5393939"
+        android:visibility="gone">
+        <TextView
+            android:id="@+id/alarm_prompt_heading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginTop="70dp"
+            android:gravity="center_horizontal|center_vertical"
+            android:backgroundTint="@color/white"
+            android:elevation="10dp"
+            android:text="Select the desired state of the appliances when alarm is triggered"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="15dp"
+            android:background="@drawable/ring_rectangle"
+            android:backgroundTint="@color/white" />
+
+        <ScrollView
+            android:id="@+id/alarm_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="140dp"
+            android:fillViewport="true"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/alarm_cards_holder_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <RelativeLayout
+                    android:id="@+id/alarm_bulb_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="110dp"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginRight="40dp"
+                    android:background="@android:drawable/dialog_holo_light_frame"
+                    android:elevation="20dp">
+
+                    <ImageView
+                        android:id="@+id/alarm_bulb_image"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_centerHorizontal="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="10dp"
+                        android:src="@drawable/bulb_off" />
+                </RelativeLayout>
+                <RelativeLayout
+                    android:id="@+id/alarm_fan_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginRight="40dp"
+                    android:background="@android:drawable/dialog_holo_light_frame"
+                    android:elevation="2dp">
+
+
+                    <ImageView
+                        android:id="@+id/alarm_fan_image"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_alignParentTop="true"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/ic_home_fan" />
+
+                    <LinearLayout
+                        android:id="@+id/alarm_fan_speed"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginStart="20dp"
+                        android:orientation="horizontal"
+                        android:weightSum="5">
+
+                        <ImageButton
+                            android:id="@+id/alarm_fan_speed1"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_margin="7dp"
+                            android:layout_weight="1"
+                            android:background="@color/grey" />
+
+                        <ImageButton
+                            android:id="@+id/alarm_fan_speed2"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_margin="7dp"
+                            android:layout_weight="1"
+                            android:background="@color/grey" />
+
+                        <ImageButton
+                            android:id="@+id/alarm_fan_speed3"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_margin="7dp"
+                            android:layout_weight="1"
+                            android:background="@color/grey" />
+
+                        <ImageButton
+                            android:id="@+id/alarm_fan_speed4"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_margin="7dp"
+                            android:layout_weight="1"
+                            android:background="@color/grey" />
+
+                        <ImageButton
+                            android:id="@+id/alarm_fan_speed5"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_margin="7dp"
+                            android:layout_weight="1"
+                            android:background="@color/grey" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <Button
+            android:id="@+id/alarm_prompt_set"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="50dp"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:background="@drawable/rectangle"
+            android:backgroundTint="@color/white"
+            android:elevation="10dp"
+            android:text="Set Alarm"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <ImageView
+            android:id="@+id/alarm_prompt_cross"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="25dp"
+            android:layout_marginTop="30dp"
+            android:src="@android:drawable/btn_dialog" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

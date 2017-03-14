@@ -1,7 +1,10 @@
 package com.example.rahulkumar.alivehome;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.RecognizerIntent;
@@ -46,8 +49,7 @@ public class MainActivity extends AppCompatActivity
     private ImageView home_help, home_settings;
     private ImageView home_bulb_image;
     private ImageView home_fan_image;
-    private SeekBar home_fan_seekbar;
-    private TextView home_fan_speed;
+    private ImageButton home_fan_speed1, home_fan_speed2, home_fan_speed3, home_fan_speed4, home_fan_speed5;
     private String username_init = null, password_init = null;
     private String[] data_parsed = null;
     private int status_request = 0; // Dont know
@@ -55,20 +57,15 @@ public class MainActivity extends AppCompatActivity
     public String transfer_session = "";
     public String publicKey = "<RSAPublicKey><Modulus>pManIJm8ZFVpV4w/hGkr+11gHCfou+AvpbBGMFvcYEyLC78Y2geM88v/J1uxXov6vSpZ0DFKgZzlMYgJf8f8/4HuQukZQtnC6mycqdThPxGQu8+USWcNUCkd0ilx7wlO58L/Hy2QqGxaso4HGvarIwGshfIuJDGUQ4OONavFLSk=</Modulus><Exponent>AQAB</Exponent></RSAPublicKey>";
     private String shared_aes_encryption_key;
-    private ImageView home_switch_image;
-    private Switch home_switch_user;
     private final WebSocketConnection mConnection = new WebSocketConnection();
     private String BULB_STATE = null;
     private boolean bulb_state = false;
     private String FAN_STATE = null;
-    private boolean switch_state = false;
-    private String SWITCH_STATE = null;
     private ImageButton home_audio;
     private boolean temp = true;
 
     CkRsa rsaEncryptor = new CkRsa();
     boolean usePrivateKey = false;
-    private boolean tempUser = true;
 
     //Speech to text
     private TextView txtSpeechInput;
@@ -110,22 +107,12 @@ public class MainActivity extends AppCompatActivity
                             if (data_parsed[1].equals(String.valueOf("True"))) {
                                 if ((size > 2) && data_parsed[2].equals(String.valueOf("STATUS"))) {
                                     if (data_parsed[3].equals(String.valueOf("TL_ON")) || data_parsed[3].equals(String.valueOf("TL_OFF"))) {
-                                        if (tempUser == true) {
-                                            if (data_parsed[3].equals(String.valueOf("TL_ON"))) {
-                                                home_bulb_image.setImageResource(R.drawable.bulb_on);
-                                                BULB_STATE = "TL_ON";
-                                            } else if (data_parsed[3].equals(String.valueOf("TL_OFF"))) {
-                                                home_bulb_image.setImageResource(R.drawable.bulb_off);
-                                                BULB_STATE = "TL_OFF";
-                                            }
-                                        } else {
-                                            if (data_parsed[3].equals(String.valueOf("TL_ON"))) {
-                                                home_switch_image.setImageResource(R.drawable.ic_switch_on);
-                                                SWITCH_STATE = "TL_ON";
-                                            } else if (data_parsed[3].equals(String.valueOf("TL_OFF"))) {
-                                                home_switch_image.setImageResource(R.drawable.ic_switch_off);
-                                                SWITCH_STATE = "TL_OFF";
-                                            }
+                                        if (data_parsed[3].equals(String.valueOf("TL_ON"))) {
+                                            home_bulb_image.setImageResource(R.drawable.bulb_on);
+                                            BULB_STATE = "TL_ON";
+                                        } else if (data_parsed[3].equals(String.valueOf("TL_OFF"))) {
+                                            home_bulb_image.setImageResource(R.drawable.bulb_off);
+                                            BULB_STATE = "TL_OFF";
                                         }
                                     }
 
@@ -138,33 +125,27 @@ public class MainActivity extends AppCompatActivity
 
                                         if (data_parsed[4].equals("FAN_OFF")) {
                                             home_fan_image.setImageResource(R.drawable.ic_home_fan);
-                                            home_fan_speed.setText("OFF");
-                                            home_fan_seekbar.setProgress(0);
+                                            changeFanSpeed(0, false);
                                             FAN_STATE = "FAN_OFF";
                                         } else if (data_parsed[4].equals("FAN_ON_1")) {
                                             home_fan_image.setImageResource(R.drawable.ic_home_fan1);
-                                            home_fan_speed.setText("20%");
-                                            home_fan_seekbar.setProgress(1);
+                                            changeFanSpeed(1, false);
                                             FAN_STATE = "FAN_ON_1";
                                         } else if (data_parsed[4].equals("FAN_ON_2")) {
                                             home_fan_image.setImageResource(R.drawable.ic_home_fan2);
-                                            home_fan_speed.setText("40%");
-                                            home_fan_seekbar.setProgress(2);
+                                            changeFanSpeed(2, false);
                                             FAN_STATE = "FAN_ON_2";
                                         } else if (data_parsed[4].equals("FAN_ON_3")) {
                                             home_fan_image.setImageResource(R.drawable.ic_home_fan3);
-                                            home_fan_speed.setText("60%");
-                                            home_fan_seekbar.setProgress(3);
+                                            changeFanSpeed(3, false);
                                             FAN_STATE = "FAN_ON_3";
                                         } else if (data_parsed[4].equals("FAN_ON_4")) {
                                             home_fan_image.setImageResource(R.drawable.ic_home_fan4);
-                                            home_fan_speed.setText("80%");
-                                            home_fan_seekbar.setProgress(4);
+                                            changeFanSpeed(4, false);
                                             FAN_STATE = "FAN_ON_4";
                                         } else if (data_parsed[4].equals("FAN_ON_5")) {
                                             home_fan_image.setImageResource(R.drawable.ic_home_fan5);
-                                            home_fan_speed.setText("100%");
-                                            home_fan_seekbar.setProgress(5);
+                                            changeFanSpeed(5, false);
                                             FAN_STATE = "FAN_ON_5";
                                         }
                                     }
@@ -193,11 +174,8 @@ public class MainActivity extends AppCompatActivity
                         } else if (data_parsed[0].equals("session")) {
                             transfer_session = data_parsed[1];
 
-                            if (tempUser == true) {
-                                mConnection.sendTextMessage(encryption("STATUS-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
-                            } else {
-                                mConnection.sendTextMessage(encryption("STATUS-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
-                            }
+                            mConnection.sendTextMessage(encryption("STATUS-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
+
                             status_request = 1;
                         } else {
 
@@ -232,6 +210,10 @@ public class MainActivity extends AppCompatActivity
         Bundle user_data = getIntent().getExtras();
         if (user_data == null) {
             UnAuthenticateUser();
+
+            SharedPreferences sharedPreferences = getSharedPreferences("user_Info", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.clear();
         } else {
             username_init = user_data.getString("username");
             password_init = user_data.getString("password");
@@ -239,6 +221,12 @@ public class MainActivity extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        SharedPreferences sharedPreferences = getSharedPreferences("user_Info", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("username", username_init.toString());
+        editor.putString("password", password_init.toString());
+        editor.apply();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -262,14 +250,18 @@ public class MainActivity extends AppCompatActivity
         }
 
         start();
-        home_audio = (ImageButton) findViewById(R.id.home_audio);
-        home_fan_image = (ImageView) findViewById(R.id.home_fan_image);
+
         home_bulb_image = (ImageView) findViewById(R.id.home_bulb_image);
+
         home_fan_image = (ImageView) findViewById(R.id.home_fan_image);
-        home_fan_seekbar = (SeekBar) findViewById(R.id.home_fan_seekbar);
-        home_fan_speed = (TextView) findViewById(R.id.home_fan_speed);
-        home_switch_image = (ImageView) findViewById(R.id.home_switch_image);
+        home_fan_speed1 = (ImageButton) findViewById(R.id.home_fan_speed1);
+        home_fan_speed2 = (ImageButton) findViewById(R.id.home_fan_speed2);
+        home_fan_speed3 = (ImageButton) findViewById(R.id.home_fan_speed3);
+        home_fan_speed4 = (ImageButton) findViewById(R.id.home_fan_speed4);
+        home_fan_speed5 = (ImageButton) findViewById(R.id.home_fan_speed5);
+
         home_settings = (ImageView) findViewById(R.id.home_settings);
+        home_audio = (ImageButton) findViewById(R.id.home_audio);
         home_help = (ImageView) findViewById(R.id.home_help);
 
 
@@ -301,47 +293,47 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        home_switch_image.setOnClickListener(new View.OnClickListener() {
+        home_fan_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (SWITCH_STATE.equals("TL_ON")) {
-                    switch_state = false;
-                    SWITCH_STATE = "TL_OFF";  // Done to reverse
+                if (FAN_STATE == "FAN_OFF") {
+                    changeFanSpeed(1, true);
                 } else {
-                    switch_state = true;
-                    SWITCH_STATE = "TL_ON"; // Done to reverse
+                    changeFanSpeed(0, true);
                 }
-                toggleSwitch(switch_state, 1);
+            }
+        });
+        home_fan_speed1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changeFanSpeed(1, true);
+            }
+        });
+        home_fan_speed2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changeFanSpeed(2, true);
+            }
+        });
+        home_fan_speed3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changeFanSpeed(3, true);
+            }
+        });
+        home_fan_speed4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changeFanSpeed(4, true);
+            }
+        });
+        home_fan_speed5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changeFanSpeed(5, true);
             }
         });
 
-        home_fan_seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                home_fan_speed.setText(String.valueOf(progress * 20) + " %");
-                if (progress == 0) {
-                    changeFanSpeed("FAN_OFF", 1);
-                } else if (progress == 1) {
-                    changeFanSpeed("FAN_ON_1", 1);
-                } else if (progress == 2) {
-                    changeFanSpeed("FAN_ON_2", 1);
-                } else if (progress == 3) {
-                    changeFanSpeed("FAN_ON_3", 1);
-                } else if (progress == 4) {
-                    changeFanSpeed("FAN_ON_4", 1);
-                } else if (progress == 5) {
-                    changeFanSpeed("FAN_ON_5", 1);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
 ///////////////////////////////////////////
         //For speech rec
         home_audio.setOnClickListener(new View.OnClickListener() {
@@ -379,6 +371,13 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Toast.makeText(this, "To be added", Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (id == R.id.action_help) {
+            Toast.makeText(this, "To be added", Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (id == R.id.action_sign_out) {
+            Toast.makeText(this, "To be added", Toast.LENGTH_SHORT).show();
             return true;
         }
 
@@ -391,14 +390,10 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
+        if (id == R.id.nav_alarm) {
+            Intent i = new Intent(this, AlarmActivity.class);
+            startActivity(i);
+            // Handle the alarm action
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -453,51 +448,69 @@ public class MainActivity extends AppCompatActivity
             mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
     }
 
-    public void toggleSwitch(boolean changeTo, int receivedSend) {
-        if (changeTo == true) {
-            home_switch_image.setImageResource(R.drawable.ic_switch_on);
-            SWITCH_STATE = "TL_ON";
-        } else if (changeTo == false) {
-            home_switch_image.setImageResource(R.drawable.ic_switch_off);
-            SWITCH_STATE = "TL_OFF";
-        }
-        if (receivedSend == 1)
-            mConnection.sendTextMessage(encryption("CTRL-" + "ctos" + "-" + SWITCH_STATE + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
-    }
-
-    public void changeFanSpeed(String changeTo, int receivedSend) {
-        if (changeTo == "FAN_OFF") {
+    public void changeFanSpeed(int speed, boolean receivedSend) {
+        if (speed == 0) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan);
-            home_fan_speed.setText("OFF");
-            home_fan_seekbar.setProgress(0);
+
+            home_fan_speed1.setBackgroundResource(R.color.grey);
+            home_fan_speed2.setBackgroundResource(R.color.grey);
+            home_fan_speed3.setBackgroundResource(R.color.grey);
+            home_fan_speed4.setBackgroundResource(R.color.grey);
+            home_fan_speed5.setBackgroundResource(R.color.grey);
+
             FAN_STATE = "FAN_OFF";
-        } else if (changeTo == "FAN_ON_1") {
+        } else if (speed == 1) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan1);
-            home_fan_speed.setText("20%");
-            home_fan_seekbar.setProgress(1);
+
+            home_fan_speed1.setBackgroundResource(R.color.blue);
+            home_fan_speed2.setBackgroundResource(R.color.grey);
+            home_fan_speed3.setBackgroundResource(R.color.grey);
+            home_fan_speed4.setBackgroundResource(R.color.grey);
+            home_fan_speed5.setBackgroundResource(R.color.grey);
+
             FAN_STATE = "FAN_ON_1";
-        } else if (changeTo == "FAN_ON_2") {
+        } else if (speed == 2) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan2);
-            home_fan_speed.setText("40%");
-            home_fan_seekbar.setProgress(2);
+
+            home_fan_speed1.setBackgroundResource(R.color.blue);
+            home_fan_speed2.setBackgroundResource(R.color.blue);
+            home_fan_speed3.setBackgroundResource(R.color.grey);
+            home_fan_speed4.setBackgroundResource(R.color.grey);
+            home_fan_speed5.setBackgroundResource(R.color.grey);
+
             FAN_STATE = "FAN_ON_2";
-        } else if (changeTo == "FAN_ON_3") {
+        } else if (speed == 3) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan3);
-            home_fan_speed.setText("60%");
-            home_fan_seekbar.setProgress(3);
+
+            home_fan_speed1.setBackgroundResource(R.color.blue);
+            home_fan_speed2.setBackgroundResource(R.color.blue);
+            home_fan_speed3.setBackgroundResource(R.color.blue);
+            home_fan_speed4.setBackgroundResource(R.color.grey);
+            home_fan_speed5.setBackgroundResource(R.color.grey);
+
             FAN_STATE = "FAN_ON_3";
-        } else if (changeTo == "FAN_ON_4") {
+        } else if (speed == 4) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan4);
-            home_fan_speed.setText("80%");
-            home_fan_seekbar.setProgress(4);
+
+            home_fan_speed1.setBackgroundResource(R.color.blue);
+            home_fan_speed2.setBackgroundResource(R.color.blue);
+            home_fan_speed3.setBackgroundResource(R.color.blue);
+            home_fan_speed4.setBackgroundResource(R.color.blue);
+            home_fan_speed5.setBackgroundResource(R.color.grey);
+
             FAN_STATE = "FAN_ON_4";
-        } else if (changeTo == "FAN_ON_5") {
+        } else if (speed == 5) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan5);
-            home_fan_speed.setText("100%");
-            home_fan_seekbar.setProgress(5);
+
+            home_fan_speed1.setBackgroundResource(R.color.blue);
+            home_fan_speed2.setBackgroundResource(R.color.blue);
+            home_fan_speed3.setBackgroundResource(R.color.blue);
+            home_fan_speed4.setBackgroundResource(R.color.blue);
+            home_fan_speed5.setBackgroundResource(R.color.blue);
+
             FAN_STATE = "FAN_ON_5";
         }
-        if (receivedSend == 1)
+        if (receivedSend == true)
             mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
 
     }
@@ -561,7 +574,7 @@ public class MainActivity extends AppCompatActivity
                             text.equals("switch off the fam") ||
                             text.equals("switch off the phone")) {
                         speakOut("OK");
-                        changeFanSpeed("FAN_OFF", 1);
+                        changeFanSpeed(0, true);
                     } else if (text.equals("lights on")) {
                         speakOut("Lights switched on!!");
                         bulb_state = true;
@@ -582,43 +595,58 @@ public class MainActivity extends AppCompatActivity
                         tempFanSpeedSelector = false;
                         String changeTo = "FAN_ON_" + text;
                         if (changeTo.equals("FAN_ON_1")) {
-                            home_fan_image.setImageResource(R.drawable.ic_home_fan1);
-                            home_fan_speed.setText("20%");
-                            home_fan_seekbar.setProgress(1);
+                            home_fan_image.setImageResource(R.drawable.ic_home_fan);
+
+                            home_fan_speed1.setBackgroundResource(R.color.blue);
+                            home_fan_speed2.setBackgroundResource(R.color.grey);
+                            home_fan_speed3.setBackgroundResource(R.color.grey);
+                            home_fan_speed4.setBackgroundResource(R.color.grey);
+                            home_fan_speed5.setBackgroundResource(R.color.grey);
+
                             FAN_STATE = "FAN_ON_1";
                         } else if (changeTo.equals("FAN_ON_2")) {
                             home_fan_image.setImageResource(R.drawable.ic_home_fan2);
-                            home_fan_speed.setText("40%");
-                            home_fan_seekbar.setProgress(2);
+
+                            home_fan_speed1.setBackgroundResource(R.color.blue);
+                            home_fan_speed2.setBackgroundResource(R.color.blue);
+                            home_fan_speed3.setBackgroundResource(R.color.grey);
+                            home_fan_speed4.setBackgroundResource(R.color.grey);
+                            home_fan_speed5.setBackgroundResource(R.color.grey);
+
                             FAN_STATE = "FAN_ON_2";
                         } else if (changeTo.equals("FAN_ON_3")) {
                             home_fan_image.setImageResource(R.drawable.ic_home_fan3);
-                            home_fan_speed.setText("60%");
-                            home_fan_seekbar.setProgress(3);
+
+                            home_fan_speed1.setBackgroundResource(R.color.blue);
+                            home_fan_speed2.setBackgroundResource(R.color.blue);
+                            home_fan_speed3.setBackgroundResource(R.color.blue);
+                            home_fan_speed4.setBackgroundResource(R.color.grey);
+                            home_fan_speed5.setBackgroundResource(R.color.grey);
+
                             FAN_STATE = "FAN_ON_3";
                         } else if (changeTo.equals("FAN_ON_4")) {
                             home_fan_image.setImageResource(R.drawable.ic_home_fan4);
-                            home_fan_speed.setText("80%");
-                            home_fan_seekbar.setProgress(4);
+
+                            home_fan_speed1.setBackgroundResource(R.color.blue);
+                            home_fan_speed2.setBackgroundResource(R.color.blue);
+                            home_fan_speed3.setBackgroundResource(R.color.blue);
+                            home_fan_speed4.setBackgroundResource(R.color.blue);
+                            home_fan_speed5.setBackgroundResource(R.color.grey);
+
                             FAN_STATE = "FAN_ON_4";
                         } else if (changeTo.equals("FAN_ON_5")) {
                             home_fan_image.setImageResource(R.drawable.ic_home_fan5);
-                            home_fan_speed.setText("100%");
-                            home_fan_seekbar.setProgress(5);
+
+                            home_fan_speed1.setBackgroundResource(R.color.blue);
+                            home_fan_speed2.setBackgroundResource(R.color.blue);
+                            home_fan_speed3.setBackgroundResource(R.color.blue);
+                            home_fan_speed4.setBackgroundResource(R.color.blue);
+                            home_fan_speed5.setBackgroundResource(R.color.blue);
+
                             FAN_STATE = "FAN_ON_5";
                         }
                         mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
 
-                    } else if (text.equals("turn on the switch")) {
-                        speakOut("OK");
-                        switch_state = true;
-                        SWITCH_STATE = "TL_ON";
-                        toggleSwitch(switch_state, 1);
-                    } else if (text.equals("turn off the switch")) {
-                        speakOut("OK");
-                        switch_state = false;
-                        SWITCH_STATE = "TL_OFF";
-                        toggleSwitch(switch_state, 1);
                     } else {
                         speakOut("Sorry ! Command not recognised.");
                     }

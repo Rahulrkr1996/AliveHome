@@ -22,4 +22,12 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="alarm_appliance_hint">Choose an appliance</string>
+    <string-array name="alarm_appliance">
+        <item>Light</item>
+        <item>Fan</item>
+        <item>Switch</item>
+    </string-array>
+
 </resources>

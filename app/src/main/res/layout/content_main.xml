@@ -25,9 +25,9 @@
         android:id="@+id/home_cards_scrollview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="100dp"
         android:fillViewport="true"
-        android:orientation="vertical"
-        android:layout_marginTop="100dp">
+        android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/home_cards_holder_layout"
@@ -40,8 +40,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
                 android:layout_gravity="center"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
                 android:background="@android:drawable/dialog_holo_light_frame"
                 android:elevation="20dp">
 
@@ -58,10 +58,10 @@
             <RelativeLayout
                 android:id="@+id/home_fan_card"
                 android:layout_width="match_parent"
-                android:layout_height="130dp"
+                android:layout_height="150dp"
                 android:layout_gravity="center"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
                 android:background="@android:drawable/dialog_holo_light_frame"
                 android:elevation="2dp">
 
@@ -76,54 +76,54 @@
                     android:layout_marginTop="10dp"
                     android:src="@drawable/ic_home_fan" />
 
-                <SeekBar
-                    android:id="@+id/home_fan_seekbar"
+                <LinearLayout
+                    android:id="@+id/home_fan_speed"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="30dp"
+                    android:orientation="horizontal"
                     android:layout_alignParentBottom="true"
                     android:layout_alignParentEnd="true"
-                    android:layout_marginBottom="8dp"
+                    android:layout_marginBottom="10dp"
                     android:layout_marginEnd="20dp"
                     android:layout_marginStart="20dp"
-                    android:max="5"
-                    android:progress="0"
-                    android:progressTint="@android:color/holo_blue_bright"
-                    android:thumbTint="@android:color/holo_blue_dark" />
+                    android:weightSum="5">
 
-                <TextView
-                    android:id="@+id/home_fan_speed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginRight="10dp"
-                    android:text="0 %"
-                    android:textColor="@color/colorPrimaryDark"
-                    android:textColorHighlight="@color/colorPrimaryDark"
-                    android:textColorLink="@color/colorPrimaryDark"
-                    android:textSize="25dp" />
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:id="@+id/home_switch_card"
-                android:layout_width="match_parent"
-                android:layout_height="110dp"
-                android:layout_gravity="center"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:background="@android:drawable/dialog_holo_light_frame"
-                android:elevation="2dp">
-
-                <ImageView
-                    android:id="@+id/home_switch_image"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_centerHorizontal="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginTop="10dp"
-                    android:src="@drawable/ic_switch_off" />
-
+                    <ImageButton
+                        android:id="@+id/home_fan_speed1"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_margin="7dp"
+                        android:background="@color/grey"
+                        android:layout_weight="1"/>
+                    <ImageButton
+                        android:id="@+id/home_fan_speed2"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_margin="7dp"
+                        android:background="@color/grey"
+                        android:layout_weight="1"/>
+                    <ImageButton
+                        android:id="@+id/home_fan_speed3"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_margin="7dp"
+                        android:background="@color/grey"
+                        android:layout_weight="1"/>
+                    <ImageButton
+                        android:id="@+id/home_fan_speed4"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_margin="7dp"
+                        android:background="@color/grey"
+                        android:layout_weight="1"/>
+                    <ImageButton
+                        android:id="@+id/home_fan_speed5"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_margin="7dp"
+                        android:background="@color/grey"
+                        android:layout_weight="1"/>
+                </LinearLayout>
             </RelativeLayout>
 
         </LinearLayout>
