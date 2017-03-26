@@ -52,8 +52,6 @@ public class MainActivity extends AppCompatActivity
     private ImageButton home_fan_speed1, home_fan_speed2, home_fan_speed3, home_fan_speed4, home_fan_speed5;
     private String username_init = null, password_init = null;
     private String[] data_parsed = null;
-    private int status_request = 0; // Dont know
-    private int track = 0; // to check if Wifi is being used.
     public String transfer_session = "";
     public String publicKey = "<RSAPublicKey><Modulus>pManIJm8ZFVpV4w/hGkr+11gHCfou+AvpbBGMFvcYEyLC78Y2geM88v/J1uxXov6vSpZ0DFKgZzlMYgJf8f8/4HuQukZQtnC6mycqdThPxGQu8+USWcNUCkd0ilx7wlO58L/Hy2QqGxaso4HGvarIwGshfIuJDGUQ4OONavFLSk=</Modulus><Exponent>AQAB</Exponent></RSAPublicKey>";
     private String shared_aes_encryption_key;
@@ -86,7 +84,6 @@ public class MainActivity extends AppCompatActivity
 
                 @Override
                 public void onOpen() {
-                    track = 1;
                     rsaEncryptor.put_EncodingMode("hex");
                     boolean success = rsaEncryptor.ImportPublicKey(publicKey);
 
@@ -163,7 +160,6 @@ public class MainActivity extends AppCompatActivity
                                     Toast.makeText(MainActivity.this, "BLEMAC ADD received!!", Toast.LENGTH_SHORT).show();
                                 }
 
-                                status_request = 0;
                             } else if (new String("False").equals(data_parsed[1])) {
                                 UnAuthenticateUser();
                             } else {
@@ -176,7 +172,6 @@ public class MainActivity extends AppCompatActivity
 
                             mConnection.sendTextMessage(encryption("STATUS-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
 
-                            status_request = 1;
                         } else {
 
                         }
@@ -186,7 +181,6 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClose(int code, String reason) {
                     /** To-Do */
-                    track = 0;
                     Toast.makeText(MainActivity.this, "WebSocket Closed", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -377,7 +371,17 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(this, "To be added", Toast.LENGTH_SHORT).show();
             return true;
         } else if (id == R.id.action_sign_out) {
-            Toast.makeText(this, "To be added", Toast.LENGTH_SHORT).show();
+            mConnection.sendTextMessage(encryption("LOGO-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
+
+            SharedPreferences sharedPreferences = getSharedPreferences("user_Info", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.clear();
+            editor.commit();
+
+            Toast.makeText(this, "Logged Out!!", Toast.LENGTH_SHORT).show();
+            Intent i = new Intent(this,LoginActivity.class);
+            startActivity(i);
+            finish();
             return true;
         }
 
@@ -392,6 +396,8 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_alarm) {
             Intent i = new Intent(this, AlarmActivity.class);
+            i.putExtra("username",username_init);
+            i.putExtra("password",password_init);
             startActivity(i);
             // Handle the alarm action
         }

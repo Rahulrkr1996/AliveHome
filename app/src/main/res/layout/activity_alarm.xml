@@ -10,17 +10,15 @@
         android:id="@+id/alarm_UI"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="20dp"
-        android:padding="10dp">
+        android:layout_margin="20dp">
 
         <TimePicker
             android:id="@+id/alarm_selector"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_margin="10dp"
             android:foregroundGravity="center_vertical|center_horizontal|center"
             android:headerBackground="@color/colorPrimaryDark"
-            android:numbersSelectorColor="@color/colorPrimaryDark"
             android:padding="5dp" />
 
         <Button
@@ -30,7 +28,7 @@
             android:layout_below="@+id/alarm_selector"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="30dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="0dp"
             android:background="@drawable/rectangle"
             android:backgroundTint="@color/colorPrimaryDark"
             android:elevation="10dp"
@@ -38,11 +36,17 @@
             android:textColor="@color/colorPrimaryDark" />
 
         <ListView
+            android:id="@+id/alarm_listview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/alarm_set_alarm"
             android:layout_alignParentBottom="true"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:foregroundGravity="center"
+            android:cacheColorHint="@color/blue"
+            android:background="@drawable/ring_rectangle_2"
+            android:backgroundTint="@color/blue" />
 
     </RelativeLayout>
 

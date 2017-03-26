@@ -45,6 +45,8 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".AlarmActivity"
             android:theme="@style/AppTheme.NoActionBar" />
+
+        <receiver android:name="AlarmReceiver"/>
     </application>
 
 </manifest>
