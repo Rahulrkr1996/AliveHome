@@ -4,35 +4,35 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.ActionBar;
-import android.util.Log;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.CompoundButton;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.SeekBar;
-import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chilkatsoft.CkRsa;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
@@ -65,14 +65,14 @@ public class MainActivity extends AppCompatActivity
     CkRsa rsaEncryptor = new CkRsa();
     boolean usePrivateKey = false;
 
-    //Speech to text
-    private TextView txtSpeechInput;
-    private ImageButton home_speech;
-    private final int REQ_CODE_SPEECH_INPUT = 100;
+    //Chatbot
+    private final int REQ_SPEECH_CODE = 100;
+    String IP_ADDR;
+    int PORT;
 
     // Text to speech
     private TextToSpeech tts;
-
+    private String mAnswerText;
     boolean tempFanSpeedSelector = false;
 
     private void start() {
@@ -337,6 +337,9 @@ public class MainActivity extends AppCompatActivity
             }
         });
         tts = new TextToSpeech(this, this);
+        IP_ADDR = PreferenceManager.getDefaultSharedPreferences(this).getString("ip_addr", "127.0.0.1");
+        PORT = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString("port_addr", "9999"));
+
     }
 
     @Override
@@ -371,12 +374,12 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(this, "To be added", Toast.LENGTH_SHORT).show();
             return true;
         } else if (id == R.id.action_sign_out) {
-            mConnection.sendTextMessage(encryption("LOGO-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
-
             SharedPreferences sharedPreferences = getSharedPreferences("user_Info", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.clear();
             editor.commit();
+
+            mConnection.sendTextMessage(encryption("LOGO-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
 
             Toast.makeText(this, "Logged Out!!", Toast.LENGTH_SHORT).show();
             Intent i = new Intent(this,LoginActivity.class);
@@ -530,166 +533,83 @@ public class MainActivity extends AppCompatActivity
      */
     private void promptSpeechInput() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
-                getString(R.string.speech_prompt));
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speech_prompt));
+
         try {
-            startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
-        } catch (ActivityNotFoundException a) {
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.speech_not_supported),
-                    Toast.LENGTH_SHORT).show();
+            startActivityForResult(intent, REQ_SPEECH_CODE);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, getString(R.string.speech_not_supported), Toast.LENGTH_SHORT).show();
         }
     }
 
-    /**
-     * Receiving speech input
-     */
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        switch (requestCode) {
-            case REQ_CODE_SPEECH_INPUT: {
-                if (resultCode == RESULT_OK && null != data) {
+        if(requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
+            ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            String question = result.get(0);
 
-                    ArrayList<String> result = data
-                            .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    String text = result.get(0);
-
-                    if (text.equals("switch on the fan") ||
-                            text.equals("switch on the fam") ||
-                            text.equals("switch on the phone") ||
-                            text.equals("turn on the fan") ||
-                            text.equals("turn on the fam") ||
-                            text.equals("turn on the phone")) {
-                        tempFanSpeedSelector = true;
-                        speakOut("What Speed!");
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                promptSpeechInput();
-                            }
-                        }, 1000);
-                    } else if (text.equals("turn off the fan") ||
-                            text.equals("turn off the fam") ||
-                            text.equals("turn off the phone") ||
-                            text.equals("switch off the fan") ||
-                            text.equals("switch off the fam") ||
-                            text.equals("switch off the phone")) {
-                        speakOut("OK");
-                        changeFanSpeed(0, true);
-                    } else if (text.equals("lights on")) {
-                        speakOut("Lights switched on!!");
-                        bulb_state = true;
-                        BULB_STATE = "TL_ON";
-                        toggleBulb(bulb_state, 1);
-                    } else if (text.equals("lights off")) {
-                        speakOut("Lights switched off!!");
-                        bulb_state = false;
-                        BULB_STATE = "TL_OFF";
-                        toggleBulb(bulb_state, 1);
-                    } else if (tempFanSpeedSelector == true &&
-                            (text.equals("1") ||
-                                    text.equals("2") ||
-                                    text.equals("3") ||
-                                    text.equals("4") ||
-                                    text.equals("5"))) {
-                        speakOut("Fan Speed " + text + "Selected");
-                        tempFanSpeedSelector = false;
-                        String changeTo = "FAN_ON_" + text;
-                        if (changeTo.equals("FAN_ON_1")) {
-                            home_fan_image.setImageResource(R.drawable.ic_home_fan);
-
-                            home_fan_speed1.setBackgroundResource(R.color.blue);
-                            home_fan_speed2.setBackgroundResource(R.color.grey);
-                            home_fan_speed3.setBackgroundResource(R.color.grey);
-                            home_fan_speed4.setBackgroundResource(R.color.grey);
-                            home_fan_speed5.setBackgroundResource(R.color.grey);
-
-                            FAN_STATE = "FAN_ON_1";
-                        } else if (changeTo.equals("FAN_ON_2")) {
-                            home_fan_image.setImageResource(R.drawable.ic_home_fan2);
-
-                            home_fan_speed1.setBackgroundResource(R.color.blue);
-                            home_fan_speed2.setBackgroundResource(R.color.blue);
-                            home_fan_speed3.setBackgroundResource(R.color.grey);
-                            home_fan_speed4.setBackgroundResource(R.color.grey);
-                            home_fan_speed5.setBackgroundResource(R.color.grey);
-
-                            FAN_STATE = "FAN_ON_2";
-                        } else if (changeTo.equals("FAN_ON_3")) {
-                            home_fan_image.setImageResource(R.drawable.ic_home_fan3);
-
-                            home_fan_speed1.setBackgroundResource(R.color.blue);
-                            home_fan_speed2.setBackgroundResource(R.color.blue);
-                            home_fan_speed3.setBackgroundResource(R.color.blue);
-                            home_fan_speed4.setBackgroundResource(R.color.grey);
-                            home_fan_speed5.setBackgroundResource(R.color.grey);
-
-                            FAN_STATE = "FAN_ON_3";
-                        } else if (changeTo.equals("FAN_ON_4")) {
-                            home_fan_image.setImageResource(R.drawable.ic_home_fan4);
-
-                            home_fan_speed1.setBackgroundResource(R.color.blue);
-                            home_fan_speed2.setBackgroundResource(R.color.blue);
-                            home_fan_speed3.setBackgroundResource(R.color.blue);
-                            home_fan_speed4.setBackgroundResource(R.color.blue);
-                            home_fan_speed5.setBackgroundResource(R.color.grey);
-
-                            FAN_STATE = "FAN_ON_4";
-                        } else if (changeTo.equals("FAN_ON_5")) {
-                            home_fan_image.setImageResource(R.drawable.ic_home_fan5);
-
-                            home_fan_speed1.setBackgroundResource(R.color.blue);
-                            home_fan_speed2.setBackgroundResource(R.color.blue);
-                            home_fan_speed3.setBackgroundResource(R.color.blue);
-                            home_fan_speed4.setBackgroundResource(R.color.blue);
-                            home_fan_speed5.setBackgroundResource(R.color.blue);
-
-                            FAN_STATE = "FAN_ON_5";
-                        }
-                        mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
-
-                    } else {
-                        speakOut("Sorry ! Command not recognised.");
-                    }
-                }
-                break;
-            }
+            ChatbotTask chatbotTask = new ChatbotTask();
+            chatbotTask.execute(question);
         }
+
     }
 
-    // Text to Speech
-    @Override
-    public void onDestroy() {
-        // Don't forget to shutdown tts!
-        if (tts != null) {
-            tts.stop();
-            tts.shutdown();
-        }
-        super.onDestroy();
+    private void speakOut() {
+        String text = mAnswerText.toString();
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
 
     @Override
     public void onInit(int status) {
-        if (status == TextToSpeech.SUCCESS) {
-
+        if(status == TextToSpeech.SUCCESS) {
             int result = tts.setLanguage(Locale.US);
 
-            if (result == TextToSpeech.LANG_MISSING_DATA
-                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Toast.makeText(this, "This Language is not supported", Toast.LENGTH_SHORT).show();
+            if(result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("TTS", "This Language is not supported.");
+            } else {
+                home_audio.setEnabled(true);
             }
         } else {
-            Log.e("TTS", "Initialization Failed!");
+            Log.e("TTS", "Initialization Failed");
         }
     }
 
-    private void speakOut(String text) {
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-    }
+    private class ChatbotTask extends AsyncTask<String, Void, String> {
 
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                Socket clientSocket = new Socket(IP_ADDR, PORT);
+                DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+                BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                String question = strings[0];
+                Log.d(TAG, "Question: "+ question);
+                outToServer.writeBytes(question + '\n');
+                outToServer.flush();
+
+                String answer = inFromServer.readLine();
+                Log.d(TAG, "Answer:" + answer);
+                clientSocket.close();
+                return answer;
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return "Please try again !!";
+        }
+
+        @Override
+        protected void onPostExecute(String answer) {
+            super.onPostExecute(answer);
+            mAnswerText = answer;
+            speakOut();
+        }
+
+    }
 }
