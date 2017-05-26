@@ -1,11 +1,13 @@
 package com.example.rahulkumar.alivehome;
 
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity
     private TextToSpeech tts;
     private String mAnswerText;
     boolean tempFanSpeedSelector = false;
+    private ProgressDialog pd;
 
     private void start() {
 
@@ -156,6 +159,7 @@ public class MainActivity extends AppCompatActivity
 //
 //                                    Toast.makeText(getApplicationContext(), "You are connected to your room via the Web!!!", Toast.LENGTH_SHORT).show();
 //                                    count = 1;
+                                    pd.dismiss();
                                     mConnection.sendTextMessage(encryption("sessionRequest-" + username_init, shared_aes_encryption_key));
                                     Toast.makeText(MainActivity.this, "BLEMAC ADD received!!", Toast.LENGTH_SHORT).show();
                                 }
@@ -173,7 +177,9 @@ public class MainActivity extends AppCompatActivity
                             mConnection.sendTextMessage(encryption("STATUS-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
 
                         } else {
-
+                            Toast.makeText(getApplicationContext(), decrypted_data, Toast.LENGTH_SHORT).show();
+                            pd.dismiss();
+                            UnAuthenticateUser();
                         }
                     }
                 }
@@ -191,6 +197,10 @@ public class MainActivity extends AppCompatActivity
 
     private void UnAuthenticateUser() {
         finish();
+        SharedPreferences sharedPreferences = getSharedPreferences("user_Info",Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.apply();
         Intent i = new Intent(MainActivity.this, LoginActivity.class);
         startActivity(i);
         Toast.makeText(MainActivity.this, "Sorry, The login details are incorrect!!! Pls try again...", Toast.LENGTH_SHORT).show();
@@ -204,10 +214,6 @@ public class MainActivity extends AppCompatActivity
         Bundle user_data = getIntent().getExtras();
         if (user_data == null) {
             UnAuthenticateUser();
-
-            SharedPreferences sharedPreferences = getSharedPreferences("user_Info", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.clear();
         } else {
             username_init = user_data.getString("username");
             password_init = user_data.getString("password");
@@ -243,7 +249,23 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        pd = new ProgressDialog(MainActivity.this);
+        pd.setMessage("Receiving Device States!! Please Wait...");
+        pd.show();
         start();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(pd.isShowing()) {
+                    pd.dismiss();
+                    UnAuthenticateUser();
+                    Toast.makeText(MainActivity.this,
+                            "Cannot receieve Device state! Please check connectivity of Android Device and Hardware!!",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        }, 5000);
+///////////////////////////////////////
 
         home_bulb_image = (ImageView) findViewById(R.id.home_bulb_image);
 
@@ -348,7 +370,7 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            Toast.makeText(this, "Use Home Button to exit!!", Toast.LENGTH_SHORT).show();
         }
     }
 
