@@ -5,6 +5,9 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -211,6 +214,7 @@ public class MainActivity extends AppCompatActivity
             username_init = user_data.getString("username");
             password_init = user_data.getString("password");
         }
+//////////////////////////////////////////////////////////////////////
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -233,6 +237,8 @@ public class MainActivity extends AppCompatActivity
 
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setCustomView(R.layout.actionbar);
+
+/////////////////////////////////////////////////////////////////////
 
         CkRsa rsa = new CkRsa();
 

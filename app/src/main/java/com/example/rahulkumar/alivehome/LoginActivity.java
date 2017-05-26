@@ -6,6 +6,9 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +21,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * A login screen that offers login via email/password.
@@ -75,11 +79,20 @@ public class LoginActivity extends AppCompatActivity {
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Store values at the time of the login attempt.
-                String username = mUsernameView.getText().toString();
-                String password = mPasswordView.getText().toString();
+                ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-                attemptLogin(username, password);
+                if (!mWifi.isConnected()) {
+                    Toast.makeText(LoginActivity.this, "Enabling Wifi, Please wait!!", Toast.LENGTH_SHORT).show();
+                    WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+                    wifi.setWifiEnabled(true); // true or false to activate/deactivate wifi
+                } else {
+                    // Store values at the time of the login attempt.
+                    String username = mUsernameView.getText().toString();
+                    String password = mPasswordView.getText().toString();
+
+                    attemptLogin(username, password);
+                }
             }
         });
 
