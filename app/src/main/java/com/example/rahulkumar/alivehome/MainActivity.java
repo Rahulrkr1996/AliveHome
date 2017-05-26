@@ -480,61 +480,61 @@ public class MainActivity extends AppCompatActivity
         if (speed == 0) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan);
 
-            home_fan_speed1.setBackgroundResource(R.color.grey);
-            home_fan_speed2.setBackgroundResource(R.color.grey);
-            home_fan_speed3.setBackgroundResource(R.color.grey);
-            home_fan_speed4.setBackgroundResource(R.color.grey);
-            home_fan_speed5.setBackgroundResource(R.color.grey);
+            home_fan_speed1.setBackgroundResource(R.color.fan_low);
+            home_fan_speed2.setBackgroundResource(R.color.fan_low);
+            home_fan_speed3.setBackgroundResource(R.color.fan_low);
+            home_fan_speed4.setBackgroundResource(R.color.fan_low);
+            home_fan_speed5.setBackgroundResource(R.color.fan_low);
 
             FAN_STATE = "FAN_OFF";
         } else if (speed == 1) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan1);
 
-            home_fan_speed1.setBackgroundResource(R.color.blue);
-            home_fan_speed2.setBackgroundResource(R.color.grey);
-            home_fan_speed3.setBackgroundResource(R.color.grey);
-            home_fan_speed4.setBackgroundResource(R.color.grey);
-            home_fan_speed5.setBackgroundResource(R.color.grey);
+            home_fan_speed1.setBackgroundResource(R.color.fan_high1);
+            home_fan_speed2.setBackgroundResource(R.color.fan_low);
+            home_fan_speed3.setBackgroundResource(R.color.fan_low);
+            home_fan_speed4.setBackgroundResource(R.color.fan_low);
+            home_fan_speed5.setBackgroundResource(R.color.fan_low);
 
             FAN_STATE = "FAN_ON_1";
         } else if (speed == 2) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan2);
 
-            home_fan_speed1.setBackgroundResource(R.color.blue);
-            home_fan_speed2.setBackgroundResource(R.color.blue);
-            home_fan_speed3.setBackgroundResource(R.color.grey);
-            home_fan_speed4.setBackgroundResource(R.color.grey);
-            home_fan_speed5.setBackgroundResource(R.color.grey);
+            home_fan_speed1.setBackgroundResource(R.color.fan_high1);
+            home_fan_speed2.setBackgroundResource(R.color.fan_high2);
+            home_fan_speed3.setBackgroundResource(R.color.fan_low);
+            home_fan_speed4.setBackgroundResource(R.color.fan_low);
+            home_fan_speed5.setBackgroundResource(R.color.fan_low);
 
             FAN_STATE = "FAN_ON_2";
         } else if (speed == 3) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan3);
 
-            home_fan_speed1.setBackgroundResource(R.color.blue);
-            home_fan_speed2.setBackgroundResource(R.color.blue);
-            home_fan_speed3.setBackgroundResource(R.color.blue);
-            home_fan_speed4.setBackgroundResource(R.color.grey);
-            home_fan_speed5.setBackgroundResource(R.color.grey);
+            home_fan_speed1.setBackgroundResource(R.color.fan_high1);
+            home_fan_speed2.setBackgroundResource(R.color.fan_high2);
+            home_fan_speed3.setBackgroundResource(R.color.fan_high3);
+            home_fan_speed4.setBackgroundResource(R.color.fan_low);
+            home_fan_speed5.setBackgroundResource(R.color.fan_low);
 
             FAN_STATE = "FAN_ON_3";
         } else if (speed == 4) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan4);
 
-            home_fan_speed1.setBackgroundResource(R.color.blue);
-            home_fan_speed2.setBackgroundResource(R.color.blue);
-            home_fan_speed3.setBackgroundResource(R.color.blue);
-            home_fan_speed4.setBackgroundResource(R.color.blue);
-            home_fan_speed5.setBackgroundResource(R.color.grey);
+            home_fan_speed1.setBackgroundResource(R.color.fan_high1);
+            home_fan_speed2.setBackgroundResource(R.color.fan_high2);
+            home_fan_speed3.setBackgroundResource(R.color.fan_high3);
+            home_fan_speed4.setBackgroundResource(R.color.fan_high4);
+            home_fan_speed5.setBackgroundResource(R.color.fan_low);
 
             FAN_STATE = "FAN_ON_4";
         } else if (speed == 5) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan5);
 
-            home_fan_speed1.setBackgroundResource(R.color.blue);
-            home_fan_speed2.setBackgroundResource(R.color.blue);
-            home_fan_speed3.setBackgroundResource(R.color.blue);
-            home_fan_speed4.setBackgroundResource(R.color.blue);
-            home_fan_speed5.setBackgroundResource(R.color.blue);
+            home_fan_speed1.setBackgroundResource(R.color.fan_high1);
+            home_fan_speed2.setBackgroundResource(R.color.fan_high2);
+            home_fan_speed3.setBackgroundResource(R.color.fan_high3);
+            home_fan_speed4.setBackgroundResource(R.color.fan_high4);
+            home_fan_speed5.setBackgroundResource(R.color.fan_high5);
 
             FAN_STATE = "FAN_ON_5";
         }

@@ -8,4 +8,12 @@
     <color name="blue">#59a9ff</color>
     <color name="grey">#b7b7b7</color>
     <color name="red">#f3ff1100</color>
+    <!-- fan level colors -->
+    <color name="fan_low">#f3848484</color>
+    <color name="fan_high1">#9dfdf5</color>
+    <color name="fan_high2">#00ffea</color>
+    <color name="fan_high3">#009dff</color>
+    <color name="fan_high4">#006aff</color>
+    <color name="fan_high5">#001aff</color>
+
 </resources>

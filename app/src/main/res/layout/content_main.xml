@@ -94,35 +94,35 @@
                         android:layout_height="20dp"
                         android:layout_margin="7dp"
                         android:background="@color/grey"
-                        android:layout_weight="1"/>
+                        android:layout_weight="1" />
                     <ImageButton
                         android:id="@+id/home_fan_speed2"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:layout_margin="7dp"
                         android:background="@color/grey"
-                        android:layout_weight="1"/>
+                        android:layout_weight="1" />
                     <ImageButton
                         android:id="@+id/home_fan_speed3"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:layout_margin="7dp"
                         android:background="@color/grey"
-                        android:layout_weight="1"/>
+                        android:layout_weight="1" />
                     <ImageButton
                         android:id="@+id/home_fan_speed4"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:layout_margin="7dp"
                         android:background="@color/grey"
-                        android:layout_weight="1"/>
+                        android:layout_weight="1" />
                     <ImageButton
                         android:id="@+id/home_fan_speed5"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:layout_margin="7dp"
                         android:background="@color/grey"
-                        android:layout_weight="1"/>
+                        android:layout_weight="1" />
                 </LinearLayout>
             </RelativeLayout>
 
