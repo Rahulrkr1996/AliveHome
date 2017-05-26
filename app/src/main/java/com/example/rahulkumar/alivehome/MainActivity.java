@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity
     private String FAN_STATE = null;
     private ImageButton home_audio;
     private boolean temp = true;
-
+    private int backPressedCount=0;
     CkRsa rsaEncryptor = new CkRsa();
     boolean usePrivateKey = false;
 
@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity
 
     private void UnAuthenticateUser() {
         finish();
-        SharedPreferences sharedPreferences = getSharedPreferences("user_Info",Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences("user_Info", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.apply();
@@ -256,7 +256,7 @@ public class MainActivity extends AppCompatActivity
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if(pd.isShowing()) {
+                if (pd.isShowing()) {
                     pd.dismiss();
                     UnAuthenticateUser();
                     Toast.makeText(MainActivity.this,
@@ -370,7 +370,11 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            Toast.makeText(this, "Use Home Button to exit!!", Toast.LENGTH_SHORT).show();
+            if (backPressedCount % 5 == 0) {
+                Toast.makeText(this, "Use Home Button to exit!!", Toast.LENGTH_SHORT).show();
+
+            }
+            backPressedCount++;
         }
     }
 
@@ -404,7 +408,7 @@ public class MainActivity extends AppCompatActivity
             mConnection.sendTextMessage(encryption("LOGO-" + username_init + "-" + transfer_session, shared_aes_encryption_key));
 
             Toast.makeText(this, "Logged Out!!", Toast.LENGTH_SHORT).show();
-            Intent i = new Intent(this,LoginActivity.class);
+            Intent i = new Intent(this, LoginActivity.class);
             startActivity(i);
             finish();
             return true;
@@ -421,8 +425,8 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_alarm) {
             Intent i = new Intent(this, AlarmActivity.class);
-            i.putExtra("username",username_init);
-            i.putExtra("password",password_init);
+            i.putExtra("username", username_init);
+            i.putExtra("password", password_init);
             startActivity(i);
             // Handle the alarm action
         }
@@ -570,7 +574,7 @@ public class MainActivity extends AppCompatActivity
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
+        if (requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
             ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             String question = result.get(0);
 
@@ -587,10 +591,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onInit(int status) {
-        if(status == TextToSpeech.SUCCESS) {
+        if (status == TextToSpeech.SUCCESS) {
             int result = tts.setLanguage(Locale.US);
 
-            if(result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.e("TTS", "This Language is not supported.");
             } else {
                 home_audio.setEnabled(true);
@@ -609,7 +613,7 @@ public class MainActivity extends AppCompatActivity
                 DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
                 BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 String question = strings[0];
-                Log.d(TAG, "Question: "+ question);
+                Log.d(TAG, "Question: " + question);
                 outToServer.writeBytes(question + '\n');
                 outToServer.flush();
 
