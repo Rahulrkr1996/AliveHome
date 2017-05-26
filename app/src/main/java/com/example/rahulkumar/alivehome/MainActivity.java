@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity
     private String FAN_STATE = null;
     private ImageButton home_audio;
     private boolean temp = true;
-    private int backPressedCount=0;
+    private int backPressedCount = 0;
     CkRsa rsaEncryptor = new CkRsa();
     boolean usePrivateKey = false;
 
@@ -203,7 +203,6 @@ public class MainActivity extends AppCompatActivity
         editor.apply();
         Intent i = new Intent(MainActivity.this, LoginActivity.class);
         startActivity(i);
-        Toast.makeText(MainActivity.this, "Sorry, The login details are incorrect!!! Pls try again...", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -214,6 +213,7 @@ public class MainActivity extends AppCompatActivity
         Bundle user_data = getIntent().getExtras();
         if (user_data == null) {
             UnAuthenticateUser();
+            Toast.makeText(MainActivity.this, "Sorry, The login details are incorrect!!! Pls try again...", Toast.LENGTH_SHORT).show();
         } else {
             username_init = user_data.getString("username");
             password_init = user_data.getString("password");
@@ -575,18 +575,16 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
-            ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            String question = result.get(0);
+            ArrayList<String> result = data
+                    .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
-            ChatbotTask chatbotTask = new ChatbotTask();
-            chatbotTask.execute(question);
+            speakOut(result.get(0));
         }
 
     }
 
-    private void speakOut() {
-        String text = mAnswerText.toString();
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+    private void speakOut(String data) {
+        tts.speak(data, TextToSpeech.QUEUE_FLUSH, null);
     }
 
     @Override
@@ -603,39 +601,5 @@ public class MainActivity extends AppCompatActivity
             Log.e("TTS", "Initialization Failed");
         }
     }
-
-    private class ChatbotTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... strings) {
-            try {
-                Socket clientSocket = new Socket(IP_ADDR, PORT);
-                DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-                BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                String question = strings[0];
-                Log.d(TAG, "Question: " + question);
-                outToServer.writeBytes(question + '\n');
-                outToServer.flush();
-
-                String answer = inFromServer.readLine();
-                Log.d(TAG, "Answer:" + answer);
-                clientSocket.close();
-                return answer;
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return "Please try again !!";
-        }
-
-        @Override
-        protected void onPostExecute(String answer) {
-            super.onPostExecute(answer);
-            mAnswerText = answer;
-            speakOut();
-        }
-
-    }
 }
+
