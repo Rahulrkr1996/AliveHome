@@ -1,15 +1,25 @@
 package com.example.rahulkumar.alivehome;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothManager;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
@@ -62,6 +72,7 @@ public class MainActivity extends AppCompatActivity
     private int backPressedCount = 0;
     CkRsa rsaEncryptor = new CkRsa();
     boolean usePrivateKey = false;
+    private ProgressDialog pd;
 
     //Chatbot
     private final int REQ_SPEECH_CODE = 100;
@@ -70,9 +81,39 @@ public class MainActivity extends AppCompatActivity
 
     // Text to speech
     private TextToSpeech tts;
-    private String mAnswerText;
-    boolean tempFanSpeedSelector = false;
-    private ProgressDialog pd;
+
+    // BLe variables
+    private boolean BLEConnected = false;
+    private String mDeviceName = "AliveBLe1";
+    private String mDeviceAddress;
+    private BluetoothLeService mBluetoothLeService;
+    private BluetoothAdapter mBluetoothAdapter;
+    private static final int REQUEST_ENABLE_BT = 1;
+
+    // Code to manage Service lifecycle.
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    // Handles various events fired by the Service.
+    // ACTION_GATT_CONNECTED: connected to a GATT server.
+    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
+    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
+    // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read or notification operations.
+    private BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+        }
+    };
 
     private void start() {
 
@@ -146,15 +187,15 @@ public class MainActivity extends AppCompatActivity
                                         }
                                     }
                                 } else if ((size > 2) && data_parsed[2].equals("BLEMAC")) {
-//                                    SharedPreferences ble_mac_add = getSharedPreferences("BLEMACAdd", Context.MODE_PRIVATE);
-//                                    SharedPreferences.Editor editor = ble_mac_add.edit();
-//                                    editor.putString("blemacadd", data_parsed[3]);
-//                                    editor.commit();
-//                                    mBluetoothLeService.disconnect();
-//                                    mBluetoothLeService.connect(data_parsed[3]);
-//
-//                                    Toast.makeText(getApplicationContext(), "You are connected to your room via the Web!!!", Toast.LENGTH_SHORT).show();
-//                                    count = 1;
+                                    mDeviceAddress = data_parsed[3].substring(0, 17);
+                                    SharedPreferences ble_mac_add = getSharedPreferences("user_Info", Context.MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = ble_mac_add.edit();
+                                    editor.putString("ble_add", mDeviceAddress);
+                                    editor.commit();
+                                    connectBluetooth(mDeviceAddress);
+
+                                    Toast.makeText(getApplicationContext(), "You are connected to your room via bluetooth!!", Toast.LENGTH_SHORT).show();
+
                                     pd.dismiss();
                                     mConnection.sendTextMessage(encryption("sessionRequest-" + username_init, shared_aes_encryption_key));
                                     Toast.makeText(MainActivity.this, "BLEMAC ADD received!!", Toast.LENGTH_SHORT).show();
@@ -416,6 +457,22 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (BLEConnected == true)
+            unregisterReceiver(mGattUpdateReceiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (BLEConnected == true) {
+            unbindService(mServiceConnection);
+            mBluetoothLeService = null;
+        }
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -549,6 +606,98 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    public void connectBluetooth(final String DeviceAddress) {
+        mServiceConnection = new ServiceConnection() {
+
+            @Override
+            public void onServiceConnected(ComponentName componentName, IBinder service) {
+                mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+                if (!mBluetoothLeService.initialize()) {
+                    Log.e(TAG, "Unable to initialize Bluetooth");
+                    finish();
+                }
+                // Automatically connects to the device upon successful start-up initialization.
+                mBluetoothLeService.connect(DeviceAddress);
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName componentName) {
+                mBluetoothLeService = null;
+            }
+        };
+
+        mGattUpdateReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+                    BLEConnected = true;
+                } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                    BLEConnected = false;
+                } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                    // Show all the supported services and characteristics on the user interface.
+                    //displayGattServices(mBluetoothLeService.getSupportedGattServices());
+                    final BluetoothGattCharacteristic characteristic = mBluetoothLeService.getSupportedGattServices().get(2).getCharacteristics().get(0);
+                    final int charaProp = mBluetoothLeService.getSupportedGattServices().get(2).getCharacteristics().get(0).getProperties();
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                        mBluetoothLeService.readCharacteristic(characteristic);
+                    }
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                        mBluetoothLeService.setCharacteristicNotification(characteristic, true);
+                    }
+                } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                    //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                    /**-- Todo --*/
+                }
+            }
+        };
+        // Use this check to determine whether BLE is supported on the device.  Then you can
+        // selectively disable BLE-related features.
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this, "Bluetooth not supported. Alive sensing won't work!!", Toast.LENGTH_SHORT).show();
+            BLEConnected = false;
+        }
+
+        // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
+        // BluetoothAdapter through BluetoothManager.
+        final BluetoothManager bluetoothManager =
+                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothAdapter = bluetoothManager.getAdapter();
+
+        // Checks if Bluetooth is supported on the device.
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "BLe not supported. Alive sensing won't work!!", Toast.LENGTH_SHORT).show();
+            BLEConnected = false;
+            return;
+        }
+
+        // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
+        // fire an intent to display a dialog asking the user to grant permission to enable it.
+        if (!mBluetoothAdapter.isEnabled()) {
+            if (!mBluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+        }
+        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        if (mBluetoothLeService != null) {
+            final boolean result = mBluetoothLeService.connect(DeviceAddress);
+            Log.d(TAG, "Connect request result=" + result);
+        }
+    }
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        return intentFilter;
+    }
+
     static {
         System.loadLibrary("chilkat");
     }
@@ -572,8 +721,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
+// User chose not to enable Bluetooth.
+        if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
+            Toast.makeText(this, "Bluetooth turned off? Alive sensing won't be avaliable...", Toast.LENGTH_SHORT).show();
+            return;
+        } else if (requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
             ArrayList<String> result = data
                     .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
