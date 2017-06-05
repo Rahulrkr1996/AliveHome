@@ -38,12 +38,29 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
+import android.util.Base64;
 
 import com.chilkatsoft.CkRsa;
 
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Random;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import de.tavendo.autobahn.WebSocketConnection;
 import de.tavendo.autobahn.WebSocketConnectionHandler;
@@ -70,8 +87,8 @@ public class MainActivity extends AppCompatActivity
     private ImageButton home_audio;
     private boolean temp = true;
     private int backPressedCount = 0;
-    CkRsa rsaEncryptor = new CkRsa();
-    boolean usePrivateKey = false;
+//    CkRsa rsaEncryptor = new CkRsa();
+//    boolean usePrivateKey = false;
     private ProgressDialog pd;
 
     //Chatbot
@@ -124,13 +141,41 @@ public class MainActivity extends AppCompatActivity
 
                 @Override
                 public void onOpen() {
-                    rsaEncryptor.put_EncodingMode("hex");
-                    boolean success = rsaEncryptor.ImportPublicKey(publicKey);
-
-/** Duing Login/Signup */
                     shared_aes_encryption_key = shared_key_generator();
-                    mConnection.sendTextMessage(rsaEncryptor.encryptStringENC("LOGI-" + username_init + "-" + password_init + "-" + shared_aes_encryption_key, usePrivateKey));
-                    mConnection.sendTextMessage(rsaEncryptor.encryptStringENC("ENQ-" + username_init + "-" + shared_aes_encryption_key, usePrivateKey));
+                    try {
+                        mConnection.sendTextMessage(encryptCrypto("LOGI-" + username_init + "-" + password_init + "-" + shared_aes_encryption_key));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeySpecException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeyException e) {
+                        e.printStackTrace();
+                    } catch (BadPaddingException e) {
+                        e.printStackTrace();
+                    } catch (IllegalBlockSizeException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchPaddingException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        mConnection.sendTextMessage(encryptCrypto("ENQ-" + username_init + "-" + shared_aes_encryption_key));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeySpecException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeyException e) {
+                        e.printStackTrace();
+                    } catch (BadPaddingException e) {
+                        e.printStackTrace();
+                    } catch (IllegalBlockSizeException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchPaddingException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override
@@ -186,6 +231,7 @@ public class MainActivity extends AppCompatActivity
                                             FAN_STATE = "FAN_ON_5";
                                         }
                                     }
+                                    pd.dismiss();
                                 } else if ((size > 2) && data_parsed[2].equals("BLEMAC")) {
                                     mDeviceAddress = data_parsed[3].substring(0, 17);
                                     SharedPreferences ble_mac_add = getSharedPreferences("user_Info", Context.MODE_PRIVATE);
@@ -194,17 +240,13 @@ public class MainActivity extends AppCompatActivity
                                     editor.commit();
                                     connectBluetooth(mDeviceAddress);
 
-                                    Toast.makeText(getApplicationContext(), "You are connected to your room via bluetooth!!", Toast.LENGTH_SHORT).show();
-
-                                    pd.dismiss();
                                     mConnection.sendTextMessage(encryption("sessionRequest-" + username_init, shared_aes_encryption_key));
-                                    Toast.makeText(MainActivity.this, "BLEMAC ADD received!!", Toast.LENGTH_SHORT).show();
+                                    BLEConnected = true;
                                 }
 
                             } else if (new String("False").equals(data_parsed[1])) {
+                                pd.dismiss();
                                 UnAuthenticateUser();
-                            } else {
-                                /**To-Do */
                             }
                         } else if (data_parsed[0].equals(String.valueOf("NOTIFY"))) {
                             Toast.makeText(getApplicationContext(), data_parsed[1], Toast.LENGTH_SHORT).show();
@@ -304,7 +346,7 @@ public class MainActivity extends AppCompatActivity
                             Toast.LENGTH_LONG).show();
                 }
             }
-        }, 5000);
+        }, 10000);
 ///////////////////////////////////////
 
         home_bulb_image = (ImageView) findViewById(R.id.home_bulb_image);
@@ -490,6 +532,22 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public String encryptCrypto(String message) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException {
+        InputStream is = getResources().openRawResource(R.raw.public_key);
+        byte[] keyBytes = new byte[is.available()];
+        is.read(keyBytes);
+        is.close();
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PublicKey key = kf.generatePublic(spec);
+        String s = message;
+        Cipher c = Cipher.getInstance("RSA/ECB/OAEPWithSHA-512AndMGF1Padding");
+        c.init(Cipher.ENCRYPT_MODE, key);
+        byte[] bytes = c.doFinal(s.getBytes());
+        String encrypted = Base64.encodeToString(bytes, Base64.DEFAULT);
+        return encrypted;
     }
 
     public String encryption(String data, String passkey) {
