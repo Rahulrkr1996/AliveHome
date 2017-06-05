@@ -14,9 +14,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -31,6 +28,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,13 +36,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
-import android.util.Base64;
 
-import com.chilkatsoft.CkRsa;
-
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Random;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
@@ -78,8 +70,7 @@ public class MainActivity extends AppCompatActivity
     private String username_init = null, password_init = null;
     private String[] data_parsed = null;
     public String transfer_session = "";
-    public String publicKey = "<RSAPublicKey><Modulus>pManIJm8ZFVpV4w/hGkr+11gHCfou+AvpbBGMFvcYEyLC78Y2geM88v/J1uxXov6vSpZ0DFKgZzlMYgJf8f8/4HuQukZQtnC6mycqdThPxGQu8+USWcNUCkd0ilx7wlO58L/Hy2QqGxaso4HGvarIwGshfIuJDGUQ4OONavFLSk=</Modulus><Exponent>AQAB</Exponent></RSAPublicKey>";
-    private String shared_aes_encryption_key;
+     private String shared_aes_encryption_key;
     private final WebSocketConnection mConnection = new WebSocketConnection();
     private String BULB_STATE = null;
     private boolean bulb_state = false;
@@ -87,8 +78,6 @@ public class MainActivity extends AppCompatActivity
     private ImageButton home_audio;
     private boolean temp = true;
     private int backPressedCount = 0;
-//    CkRsa rsaEncryptor = new CkRsa();
-//    boolean usePrivateKey = false;
     private ProgressDialog pd;
 
     //Chatbot
@@ -120,11 +109,6 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    // Handles various events fired by the Service.
-    // ACTION_GATT_CONNECTED: connected to a GATT server.
-    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
-    // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read or notification operations.
     private BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -322,15 +306,6 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setCustomView(R.layout.actionbar);
 
 /////////////////////////////////////////////////////////////////////
-
-        CkRsa rsa = new CkRsa();
-
-        boolean success = rsa.UnlockComponent("Anything for 30-day trial");
-        if (success != true) {
-            Log.i("Chilkat", "RSA component unlock failed");
-            return;
-        }
-
         pd = new ProgressDialog(MainActivity.this);
         pd.setMessage("Receiving Device States!! Please Wait...");
         pd.show();
@@ -437,7 +412,8 @@ public class MainActivity extends AppCompatActivity
         home_audio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                promptSpeechInput();
+                Toast.makeText(MainActivity.this, "To be added!!", Toast.LENGTH_SHORT).show();
+                // promptSpeechInput();
             }
         });
         tts = new TextToSpeech(this, this);
@@ -754,10 +730,6 @@ public class MainActivity extends AppCompatActivity
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         return intentFilter;
-    }
-
-    static {
-        System.loadLibrary("chilkat");
     }
 
     /**
