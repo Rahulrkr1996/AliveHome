@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Alive Homes</string>
+    <string name="app_name">Alive Home Lite Version</string>
     <string name="speech_prompt">Issue a Command</string>
     <string name="speech_not_supported">Speech Recognition not supported</string>
     <string name="action_settings">Settings</string>
