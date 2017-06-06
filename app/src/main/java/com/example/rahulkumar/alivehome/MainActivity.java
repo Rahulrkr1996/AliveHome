@@ -60,7 +60,7 @@ import de.tavendo.autobahn.WebSocketException;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, TextToSpeech.OnInitListener {
+        implements NavigationView.OnNavigationItemSelectedListener{//}, TextToSpeech.OnInitListener {
 
     private static final String TAG = "MainActivity";
     private ImageView home_help, home_settings;
@@ -80,13 +80,13 @@ public class MainActivity extends AppCompatActivity
     private int backPressedCount = 0;
     private ProgressDialog pd;
 
-    //Chatbot
-    private final int REQ_SPEECH_CODE = 100;
-    String IP_ADDR;
-    int PORT;
-
-    // Text to speech
-    private TextToSpeech tts;
+//    //Chatbot
+//    private final int REQ_SPEECH_CODE = 100;
+//    String IP_ADDR;
+//    int PORT;
+//
+//    // Text to speech
+//    private TextToSpeech tts;
 
     // BLe variables
     private boolean BLEConnected = false;
@@ -416,9 +416,9 @@ public class MainActivity extends AppCompatActivity
                 // promptSpeechInput();
             }
         });
-        tts = new TextToSpeech(this, this);
-        IP_ADDR = PreferenceManager.getDefaultSharedPreferences(this).getString("ip_addr", "127.0.0.1");
-        PORT = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString("port_addr", "9999"));
+//        tts = new TextToSpeech(this, this);
+//        IP_ADDR = PreferenceManager.getDefaultSharedPreferences(this).getString("ip_addr", "127.0.0.1");
+//        PORT = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString("port_addr", "9999"));
 
     }
 
@@ -732,22 +732,6 @@ public class MainActivity extends AppCompatActivity
         return intentFilter;
     }
 
-    /**
-     * Showing google speech input dialog
-     */
-    private void promptSpeechInput() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speech_prompt));
-
-        try {
-            startActivityForResult(intent, REQ_SPEECH_CODE);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, getString(R.string.speech_not_supported), Toast.LENGTH_SHORT).show();
-        }
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -755,32 +739,49 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
             Toast.makeText(this, "Bluetooth turned off? Alive sensing won't be avaliable...", Toast.LENGTH_SHORT).show();
             return;
-        } else if (requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
-            ArrayList<String> result = data
-                    .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-
-            speakOut(result.get(0));
-        }
-
-    }
-
-    private void speakOut(String data) {
-        tts.speak(data, TextToSpeech.QUEUE_FLUSH, null);
-    }
-
-    @Override
-    public void onInit(int status) {
-        if (status == TextToSpeech.SUCCESS) {
-            int result = tts.setLanguage(Locale.US);
-
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.e("TTS", "This Language is not supported.");
-            } else {
-                home_audio.setEnabled(true);
-            }
-        } else {
-            Log.e("TTS", "Initialization Failed");
         }
     }
+//        else if (requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
+//            ArrayList<String> result = data
+//                    .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+//
+//            speakOut(result.get(0));
+//        }
+
+
+
+    /**
+     * Showing google speech input dialog
+     */
+//    private void promptSpeechInput() {
+//        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+//        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+//        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+//        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speech_prompt));
+//
+//        try {
+//            startActivityForResult(intent, REQ_SPEECH_CODE);
+//        } catch (ActivityNotFoundException e) {
+//            Toast.makeText(this, getString(R.string.speech_not_supported), Toast.LENGTH_SHORT).show();
+//        }
+//    }
+//    private void speakOut(String data) {
+//        tts.speak(data, TextToSpeech.QUEUE_FLUSH, null);
+//    }
+//
+//    @Override
+//    public void onInit(int status) {
+//        if (status == TextToSpeech.SUCCESS) {
+//            int result = tts.setLanguage(Locale.US);
+//
+//            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+//                Log.e("TTS", "This Language is not supported.");
+//            } else {
+//                home_audio.setEnabled(true);
+//            }
+//        } else {
+//            Log.e("TTS", "Initialization Failed");
+//        }
+//    }
 }
 
