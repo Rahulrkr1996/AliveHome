@@ -60,7 +60,7 @@ import de.tavendo.autobahn.WebSocketException;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener{//}, TextToSpeech.OnInitListener {
+        implements NavigationView.OnNavigationItemSelectedListener {//}, TextToSpeech.OnInitListener {
 
     private static final String TAG = "MainActivity";
     private ImageView home_help, home_settings;
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity
     private String username_init = null, password_init = null;
     private String[] data_parsed = null;
     public String transfer_session = "";
-     private String shared_aes_encryption_key;
+    private String shared_aes_encryption_key;
     private final WebSocketConnection mConnection = new WebSocketConnection();
     private String BULB_STATE = null;
     private boolean bulb_state = false;
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity
     private boolean temp = true;
     private int backPressedCount = 0;
     private ProgressDialog pd;
-
+    private boolean webSocketConnected;
 //    //Chatbot
 //    private final int REQ_SPEECH_CODE = 100;
 //    String IP_ADDR;
@@ -125,6 +125,8 @@ public class MainActivity extends AppCompatActivity
 
                 @Override
                 public void onOpen() {
+                    webSocketConnected = true;
+
                     shared_aes_encryption_key = shared_key_generator();
                     try {
                         mConnection.sendTextMessage(encryptCrypto("LOGI-" + username_init + "-" + password_init + "-" + shared_aes_encryption_key));
@@ -144,6 +146,7 @@ public class MainActivity extends AppCompatActivity
                         e.printStackTrace();
                     }
                     try {
+
                         mConnection.sendTextMessage(encryptCrypto("ENQ-" + username_init + "-" + shared_aes_encryption_key));
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -250,7 +253,8 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClose(int code, String reason) {
                     /** To-Do */
-                    Toast.makeText(MainActivity.this, "WebSocket Closed", Toast.LENGTH_SHORT).show();
+                    webSocketConnected = false;
+                    Toast.makeText(MainActivity.this, "WiFi disconnected, connecting again...", Toast.LENGTH_SHORT).show();
                 }
             });
         } catch (WebSocketException e) {
@@ -355,14 +359,15 @@ public class MainActivity extends AppCompatActivity
         home_bulb_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (BULB_STATE.equals("TL_ON")) {
-                    bulb_state = false;
-                    BULB_STATE = "TL_OFF";  // Done to reverse
-                } else {
-                    bulb_state = true;
-                    BULB_STATE = "TL_ON"; // Done to reverse
+                if (webSocketConnected) {
+                    toggleBulb(1);
+                }else{
+                    try{
+                        start();
+                    }catch (Exception e){
+                        Log.d(TAG,"WebSocket Closed!!!");
+                    }
                 }
-                toggleBulb(bulb_state, 1);
             }
         });
 
@@ -370,40 +375,96 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 if (FAN_STATE == "FAN_OFF") {
-                    changeFanSpeed(1, true);
+                    if (webSocketConnected) {
+                        changeFanSpeed(1, true);
+                    }else{
+                        try{
+                            start();
+                        }catch (Exception e){
+                            Log.d(TAG,"WebSocket Closed!!!");
+                        }
+                    }
                 } else {
-                    changeFanSpeed(0, true);
+                    if (webSocketConnected) {
+                        changeFanSpeed(0, true);
+                    }else{
+                        try{
+                            start();
+                        }catch (Exception e){
+                            Log.d(TAG,"WebSocket Closed!!!");
+                        }
+                    }
                 }
             }
         });
         home_fan_speed1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                changeFanSpeed(1, true);
+                if (webSocketConnected) {
+                    changeFanSpeed(1, true);
+                }else{
+                    try{
+                        start();
+                    }catch (Exception e){
+                        Log.d(TAG,"WebSocket Closed!!!");
+                    }
+                }
             }
         });
         home_fan_speed2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                changeFanSpeed(2, true);
+                if (webSocketConnected) {
+                    changeFanSpeed(2, true);
+                }else{
+                    try{
+                        start();
+                    }catch (Exception e){
+                        Log.d(TAG,"WebSocket Closed!!!");
+                    }
+                }
             }
         });
         home_fan_speed3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                changeFanSpeed(3, true);
+                if (webSocketConnected) {
+                    changeFanSpeed(3, true);
+                }else{
+                    try{
+                        start();
+                    }catch (Exception e){
+                        Log.d(TAG,"WebSocket Closed!!!");
+                    }
+                }
             }
         });
         home_fan_speed4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                changeFanSpeed(4, true);
+                if (webSocketConnected) {
+                    changeFanSpeed(4, true);
+                }else{
+                    try{
+                        start();
+                    }catch (Exception e){
+                        Log.d(TAG,"WebSocket Closed!!!");
+                    }
+                }
             }
         });
         home_fan_speed5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                changeFanSpeed(5, true);
+                if (webSocketConnected) {
+                    changeFanSpeed(5, true);
+                }else{
+                    try{
+                        start();
+                    }catch (Exception e){
+                        Log.d(TAG,"WebSocket Closed!!!");
+                    }
+                }
             }
         });
 
@@ -561,20 +622,36 @@ public class MainActivity extends AppCompatActivity
         return randomStringBuilder.toString();
     }
 
-    public void toggleBulb(boolean changeTo, int receivedSend) {
-        if (changeTo == true) {
-            home_bulb_image.setImageResource(R.drawable.bulb_on);
-            BULB_STATE = "TL_ON";
-        } else if (changeTo == false) {
-            home_bulb_image.setImageResource(R.drawable.bulb_off);
-            BULB_STATE = "TL_OFF";
-        }
+    public void toggleBulb(int receivedSend) {
+        String BULB_STATE_TEMP = "";
+        if (BULB_STATE == "TL_OFF")
+            BULB_STATE_TEMP = "TL_ON";
+        else
+            BULB_STATE_TEMP = "TL_OFF";
+
         if (receivedSend == 1)
-            mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
+            mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE_TEMP + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
     }
 
     public void changeFanSpeed(int speed, boolean receivedSend) {
+        String FAN_STATE_TEMP = "";
         if (speed == 0) {
+            FAN_STATE_TEMP = "FAN_OFF";
+        } else if (speed == 1) {
+            FAN_STATE_TEMP = "FAN_ON_1";
+        } else if (speed == 2) {
+            FAN_STATE_TEMP = "FAN_ON_2";
+        } else if (speed == 3) {
+            FAN_STATE_TEMP = "FAN_ON_3";
+        } else if (speed == 4) {
+            FAN_STATE_TEMP = "FAN_ON_4";
+        } else if (speed == 5) {
+            FAN_STATE_TEMP = "FAN_ON_5";
+        }
+
+        if (receivedSend == true) {
+            mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE + "-" + FAN_STATE_TEMP + "-" + transfer_session, shared_aes_encryption_key));
+        } else if (speed == 0) {
             home_fan_image.setImageResource(R.drawable.ic_home_fan);
 
             home_fan_speed1.setBackgroundResource(R.color.fan_low);
@@ -635,8 +712,6 @@ public class MainActivity extends AppCompatActivity
 
             FAN_STATE = "FAN_ON_5";
         }
-        if (receivedSend == true)
-            mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
 
     }
 
@@ -747,7 +822,6 @@ public class MainActivity extends AppCompatActivity
 //
 //            speakOut(result.get(0));
 //        }
-
 
 
     /**
