@@ -73,10 +73,8 @@ public class MainActivity extends AppCompatActivity
     private String shared_aes_encryption_key;
     private final WebSocketConnection mConnection = new WebSocketConnection();
     private String BULB_STATE = null;
-    private boolean bulb_state = false;
     private String FAN_STATE = null;
     private ImageButton home_audio;
-    private boolean temp = true;
     private int backPressedCount = 0;
     private ProgressDialog pd;
     private boolean webSocketConnected;
@@ -90,12 +88,12 @@ public class MainActivity extends AppCompatActivity
 
     // BLe variables
     private boolean BLEConnected = false;
-    private String mDeviceName = "AliveBLe1";
     private String mDeviceAddress;
     private BluetoothLeService mBluetoothLeService;
     private BluetoothAdapter mBluetoothAdapter;
     private static final int REQUEST_ENABLE_BT = 1;
-
+    private BluetoothGattCharacteristic characteristic;
+    private int charaProp;
     // Code to manage Service lifecycle.
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -193,27 +191,21 @@ public class MainActivity extends AppCompatActivity
                                             || data_parsed[4].equals(String.valueOf("FAN_ON_5"))) {
 
                                         if (data_parsed[4].equals("FAN_OFF")) {
-                                            home_fan_image.setImageResource(R.drawable.ic_home_fan);
                                             changeFanSpeed(0, false);
                                             FAN_STATE = "FAN_OFF";
                                         } else if (data_parsed[4].equals("FAN_ON_1")) {
-                                            home_fan_image.setImageResource(R.drawable.ic_home_fan1);
                                             changeFanSpeed(1, false);
                                             FAN_STATE = "FAN_ON_1";
                                         } else if (data_parsed[4].equals("FAN_ON_2")) {
-                                            home_fan_image.setImageResource(R.drawable.ic_home_fan2);
                                             changeFanSpeed(2, false);
                                             FAN_STATE = "FAN_ON_2";
                                         } else if (data_parsed[4].equals("FAN_ON_3")) {
-                                            home_fan_image.setImageResource(R.drawable.ic_home_fan3);
                                             changeFanSpeed(3, false);
                                             FAN_STATE = "FAN_ON_3";
                                         } else if (data_parsed[4].equals("FAN_ON_4")) {
-                                            home_fan_image.setImageResource(R.drawable.ic_home_fan4);
                                             changeFanSpeed(4, false);
                                             FAN_STATE = "FAN_ON_4";
                                         } else if (data_parsed[4].equals("FAN_ON_5")) {
-                                            home_fan_image.setImageResource(R.drawable.ic_home_fan5);
                                             changeFanSpeed(5, false);
                                             FAN_STATE = "FAN_ON_5";
                                         }
@@ -225,10 +217,9 @@ public class MainActivity extends AppCompatActivity
                                     SharedPreferences.Editor editor = ble_mac_add.edit();
                                     editor.putString("ble_add", mDeviceAddress);
                                     editor.commit();
-                                    connectBluetooth(mDeviceAddress);
+                                    BLEConnected = connectBluetooth(mDeviceAddress);
 
                                     mConnection.sendTextMessage(encryption("sessionRequest-" + username_init, shared_aes_encryption_key));
-                                    BLEConnected = true;
                                 }
 
                             } else if (new String("False").equals(data_parsed[1])) {
@@ -355,17 +346,93 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        BULB_STATE = "TL_OFF";
         home_bulb_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (webSocketConnected) {
-                    toggleBulb(1);
-                }else{
-                    try{
-                        start();
-                    }catch (Exception e){
-                        Log.d(TAG,"WebSocket Closed!!!");
+                if (BLEConnected == true) {
+                    if (BULB_STATE == "TL_OFF") {
+                        toggleBulb(0);//BULB_STATE becomes 'TL_ON'
+                        if (FAN_STATE == "FAN_OFF") {
+                            sendSerialBLE("g");
+                        } else if (FAN_STATE == "FAN_ON_1") {
+                            sendSerialBLE("h");
+                        } else if (FAN_STATE == "FAN_ON_2") {
+                            sendSerialBLE("i");
+                        } else if (FAN_STATE == "FAN_ON_3") {
+                            sendSerialBLE("j");
+                        } else if (FAN_STATE == "FAN_ON_4") {
+                            sendSerialBLE("k");
+                        } else if (FAN_STATE == "FAN_ON_5") {
+                            sendSerialBLE("l");
+                        }
+                        home_bulb_image.setImageResource(R.drawable.bulb_on);
+
+                    } else {
+                        toggleBulb(0);//BULB_STATE becomes 'TL_OFF'
+                        if (FAN_STATE == "FAN_OFF") {
+                            sendSerialBLE("a");
+                        } else if (FAN_STATE == "FAN_ON_1") {
+                            sendSerialBLE("b");
+                        } else if (FAN_STATE == "FAN_ON_2") {
+                            sendSerialBLE("c");
+                        } else if (FAN_STATE == "FAN_ON_3") {
+                            sendSerialBLE("d");
+                        } else if (FAN_STATE == "FAN_ON_4") {
+                            sendSerialBLE("e");
+                        } else if (FAN_STATE == "FAN_ON_5") {
+                            sendSerialBLE("f");
+                        }
+                        home_bulb_image.setImageResource(R.drawable.bulb_off);
+                    }
+                } else {
+                    boolean connected = connectBluetooth(mDeviceAddress);
+
+                    if (connected) {
+                        if (BULB_STATE == "TL_OFF") {
+                            toggleBulb(0);//BULB_STATE becomes 'TL_ON'
+                            home_bulb_image.setImageResource(R.drawable.bulb_on);
+
+                            if (FAN_STATE == "FAN_OFF") {
+                                sendSerialBLE("g");
+                            } else if (FAN_STATE == "FAN_ON_1") {
+                                sendSerialBLE("h");
+                            } else if (FAN_STATE == "FAN_ON_2") {
+                                sendSerialBLE("i");
+                            } else if (FAN_STATE == "FAN_ON_3") {
+                                sendSerialBLE("j");
+                            } else if (FAN_STATE == "FAN_ON_4") {
+                                sendSerialBLE("k");
+                            } else if (FAN_STATE == "FAN_ON_5") {
+                                sendSerialBLE("l");
+                            }
+                        } else {
+                            toggleBulb(0);//BULB_STATE becomes 'TL_OFF'
+                            home_bulb_image.setImageResource(R.drawable.bulb_off);
+
+                            if (FAN_STATE == "FAN_OFF") {
+                                sendSerialBLE("a");
+                            } else if (FAN_STATE == "FAN_ON_1") {
+                                sendSerialBLE("b");
+                            } else if (FAN_STATE == "FAN_ON_2") {
+                                sendSerialBLE("c");
+                            } else if (FAN_STATE == "FAN_ON_3") {
+                                sendSerialBLE("d");
+                            } else if (FAN_STATE == "FAN_ON_4") {
+                                sendSerialBLE("e");
+                            } else if (FAN_STATE == "FAN_ON_5") {
+                                sendSerialBLE("f");
+                            }
+                        }
+                    } else {
+                        if (webSocketConnected) {
+                            toggleBulb(1);
+                        } else {
+                            try {
+                                start();
+                            } catch (Exception e) {
+                                Log.d(TAG, "WebSocket Closed!!!");
+                            }
+                        }
                     }
                 }
             }
@@ -375,23 +442,62 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 if (FAN_STATE == "FAN_OFF") {
-                    if (webSocketConnected) {
-                        changeFanSpeed(1, true);
-                    }else{
-                        try{
-                            start();
-                        }catch (Exception e){
-                            Log.d(TAG,"WebSocket Closed!!!");
+                    if (BLEConnected == true) {
+                        changeFanSpeed(1, false); //FAN SPEED 1 reflected
+                        if (BULB_STATE == "TL_OFF") {
+                            sendSerialBLE("b");
+                        } else {
+                            sendSerialBLE("h");
+                        }
+                    } else {
+                        boolean connected = mBluetoothLeService.connect(mDeviceAddress);
+                        if (connected) {
+                            changeFanSpeed(1, false); //FAN SPEED 1 reflected
+                            if (BULB_STATE == "TL_OFF") {
+                                sendSerialBLE("b");
+                            } else {
+                                sendSerialBLE("h");
+                            }
+                        } else {
+                            if (webSocketConnected) {
+                                changeFanSpeed(1, true);
+                            } else {
+                                try {
+                                    start();
+                                } catch (Exception e) {
+                                    Log.d(TAG, "WebSocket Closed!!!");
+                                }
+                            }
                         }
                     }
                 } else {
-                    if (webSocketConnected) {
-                        changeFanSpeed(0, true);
-                    }else{
-                        try{
-                            start();
-                        }catch (Exception e){
-                            Log.d(TAG,"WebSocket Closed!!!");
+                    if (BLEConnected == true) {
+                        changeFanSpeed(0, false); //FAN SPEED 0 reflected
+                        if (BULB_STATE == "TL_OFF") {
+                            sendSerialBLE("a");
+                        } else {
+                            sendSerialBLE("g");
+                        }
+
+                    } else {
+                        boolean connected = mBluetoothLeService.connect(mDeviceAddress);
+                        if (connected) {
+                            changeFanSpeed(0, false); //FAN SPEED 0 reflected
+                            if (BULB_STATE == "TL_OFF") {
+                                sendSerialBLE("a");
+                            } else {
+                                sendSerialBLE("g");
+                            }
+                        } else {
+                            if (webSocketConnected) {
+                                changeFanSpeed(0, true);
+                            } else {
+                                try {
+                                    start();
+                                } catch (Exception e) {
+                                    Log.d(TAG, "WebSocket Closed!!!");
+                                }
+                            }
                         }
                     }
                 }
@@ -400,13 +506,32 @@ public class MainActivity extends AppCompatActivity
         home_fan_speed1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (webSocketConnected) {
-                    changeFanSpeed(1, true);
-                }else{
-                    try{
-                        start();
-                    }catch (Exception e){
-                        Log.d(TAG,"WebSocket Closed!!!");
+                if (BLEConnected == true) {
+                    changeFanSpeed(1, false); //FAN SPEED 1 reflected
+                    if (BULB_STATE == "TL_OFF") {
+                        sendSerialBLE("b");
+                    } else {
+                        sendSerialBLE("h");
+                    }
+                } else {
+                    boolean connected = mBluetoothLeService.connect(mDeviceAddress);
+                    if (connected) {
+                        changeFanSpeed(1, false); //FAN SPEED 1 reflected
+                        if (BULB_STATE == "TL_OFF") {
+                            sendSerialBLE("b");
+                        } else {
+                            sendSerialBLE("h");
+                        }
+                    } else {
+                        if (webSocketConnected) {
+                            changeFanSpeed(1, true);
+                        } else {
+                            try {
+                                start();
+                            } catch (Exception e) {
+                                Log.d(TAG, "WebSocket Closed!!!");
+                            }
+                        }
                     }
                 }
             }
@@ -414,13 +539,32 @@ public class MainActivity extends AppCompatActivity
         home_fan_speed2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (webSocketConnected) {
-                    changeFanSpeed(2, true);
-                }else{
-                    try{
-                        start();
-                    }catch (Exception e){
-                        Log.d(TAG,"WebSocket Closed!!!");
+                if (BLEConnected == true) {
+                    changeFanSpeed(2, false); //FAN SPEED 2 reflected
+                    if (BULB_STATE == "TL_OFF") {
+                        sendSerialBLE("c");
+                    } else {
+                        sendSerialBLE("i");
+                    }
+                } else {
+                    boolean connected = mBluetoothLeService.connect(mDeviceAddress);
+                    if (connected) {
+                        changeFanSpeed(2, false); //FAN SPEED 2 reflected
+                        if (BULB_STATE == "TL_OFF") {
+                            sendSerialBLE("c");
+                        } else {
+                            sendSerialBLE("i");
+                        }
+                    } else {
+                        if (webSocketConnected) {
+                            changeFanSpeed(2, true);
+                        } else {
+                            try {
+                                start();
+                            } catch (Exception e) {
+                                Log.d(TAG, "WebSocket Closed!!!");
+                            }
+                        }
                     }
                 }
             }
@@ -428,13 +572,32 @@ public class MainActivity extends AppCompatActivity
         home_fan_speed3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (webSocketConnected) {
-                    changeFanSpeed(3, true);
-                }else{
-                    try{
-                        start();
-                    }catch (Exception e){
-                        Log.d(TAG,"WebSocket Closed!!!");
+                if (BLEConnected == true) {
+                    changeFanSpeed(3, false); //FAN SPEED 3 reflected
+                    if (BULB_STATE == "TL_OFF") {
+                        sendSerialBLE("d");
+                    } else {
+                        sendSerialBLE("j");
+                    }
+                } else {
+                    boolean connected = mBluetoothLeService.connect(mDeviceAddress);
+                    if (connected) {
+                        changeFanSpeed(3, false); //FAN SPEED 3 reflected
+                        if (BULB_STATE == "TL_OFF") {
+                            sendSerialBLE("d");
+                        } else {
+                            sendSerialBLE("j");
+                        }
+                    } else {
+                        if (webSocketConnected) {
+                            changeFanSpeed(3, true);
+                        } else {
+                            try {
+                                start();
+                            } catch (Exception e) {
+                                Log.d(TAG, "WebSocket Closed!!!");
+                            }
+                        }
                     }
                 }
             }
@@ -442,27 +605,66 @@ public class MainActivity extends AppCompatActivity
         home_fan_speed4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (webSocketConnected) {
-                    changeFanSpeed(4, true);
-                }else{
-                    try{
-                        start();
-                    }catch (Exception e){
-                        Log.d(TAG,"WebSocket Closed!!!");
+                if (BLEConnected == true) {
+                    changeFanSpeed(4, false); //FAN SPEED 4 reflected
+                    if (BULB_STATE == "TL_OFF") {
+                        sendSerialBLE("e");
+                    } else {
+                        sendSerialBLE("k");
+                    }
+                } else {
+                    boolean connected = mBluetoothLeService.connect(mDeviceAddress);
+                    if (connected) {
+                        changeFanSpeed(4, false); //FAN SPEED 4 reflected
+                        if (BULB_STATE == "TL_OFF") {
+                            sendSerialBLE("e");
+                        } else {
+                            sendSerialBLE("k");
+                        }
+                    } else {
+                        if (webSocketConnected) {
+                            changeFanSpeed(4, true);
+                        } else {
+                            try {
+                                start();
+                            } catch (Exception e) {
+                                Log.d(TAG, "WebSocket Closed!!!");
+                            }
+                        }
                     }
                 }
             }
         });
+
         home_fan_speed5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (webSocketConnected) {
-                    changeFanSpeed(5, true);
-                }else{
-                    try{
-                        start();
-                    }catch (Exception e){
-                        Log.d(TAG,"WebSocket Closed!!!");
+                if (BLEConnected == true) {
+                    changeFanSpeed(5, false); //FAN SPEED 5 reflected
+                    if (BULB_STATE == "TL_OFF") {
+                        sendSerialBLE("f");
+                    } else {
+                        sendSerialBLE("l");
+                    }
+                } else {
+                    boolean connected = mBluetoothLeService.connect(mDeviceAddress);
+                    if (connected) {
+                        changeFanSpeed(5, false); //FAN SPEED 5 reflected
+                        if (BULB_STATE == "TL_OFF") {
+                            sendSerialBLE("f");
+                        } else {
+                            sendSerialBLE("l");
+                        }
+                    } else {
+                        if (webSocketConnected) {
+                            changeFanSpeed(5, true);
+                        } else {
+                            try {
+                                start();
+                            } catch (Exception e) {
+                                Log.d(TAG, "WebSocket Closed!!!");
+                            }
+                        }
                     }
                 }
             }
@@ -477,9 +679,6 @@ public class MainActivity extends AppCompatActivity
                 // promptSpeechInput();
             }
         });
-//        tts = new TextToSpeech(this, this);
-//        IP_ADDR = PreferenceManager.getDefaultSharedPreferences(this).getString("ip_addr", "127.0.0.1");
-//        PORT = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString("port_addr", "9999"));
 
     }
 
@@ -491,7 +690,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             if (backPressedCount % 5 == 0) {
                 Toast.makeText(this, "Use Home Button to exit!!", Toast.LENGTH_SHORT).show();
-
             }
             backPressedCount++;
         }
@@ -534,13 +732,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (BLEConnected == true)
-            unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
@@ -624,11 +815,13 @@ public class MainActivity extends AppCompatActivity
 
     public void toggleBulb(int receivedSend) {
         String BULB_STATE_TEMP = "";
-        if (BULB_STATE == "TL_OFF")
+        if (BULB_STATE == "TL_OFF") {
             BULB_STATE_TEMP = "TL_ON";
-        else
+            BULB_STATE = "TL_ON";
+        } else {
             BULB_STATE_TEMP = "TL_OFF";
-
+            BULB_STATE = "TL_OFF";
+        }
         if (receivedSend == 1)
             mConnection.sendTextMessage(encryption("CTRL-" + username_init + "-" + BULB_STATE_TEMP + "-" + FAN_STATE + "-" + transfer_session, shared_aes_encryption_key));
     }
@@ -715,7 +908,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    public void connectBluetooth(final String DeviceAddress) {
+    public boolean connectBluetooth(final String DeviceAddress) {
         mServiceConnection = new ServiceConnection() {
 
             @Override
@@ -727,11 +920,14 @@ public class MainActivity extends AppCompatActivity
                 }
                 // Automatically connects to the device upon successful start-up initialization.
                 mBluetoothLeService.connect(DeviceAddress);
+                BLEConnected = true;
+                Toast.makeText(MainActivity.this, "Bluetooth connected!!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onServiceDisconnected(ComponentName componentName) {
                 mBluetoothLeService = null;
+                BLEConnected = false;
             }
         };
 
@@ -746,8 +942,8 @@ public class MainActivity extends AppCompatActivity
                 } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                     // Show all the supported services and characteristics on the user interface.
                     //displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                    final BluetoothGattCharacteristic characteristic = mBluetoothLeService.getSupportedGattServices().get(2).getCharacteristics().get(0);
-                    final int charaProp = mBluetoothLeService.getSupportedGattServices().get(2).getCharacteristics().get(0).getProperties();
+                    characteristic = mBluetoothLeService.getSupportedGattServices().get(2).getCharacteristics().get(0);
+                    charaProp = mBluetoothLeService.getSupportedGattServices().get(2).getCharacteristics().get(0).getProperties();
                     if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
                         mBluetoothLeService.readCharacteristic(characteristic);
                     }
@@ -755,8 +951,9 @@ public class MainActivity extends AppCompatActivity
                         mBluetoothLeService.setCharacteristicNotification(characteristic, true);
                     }
                 } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                    //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-                    /**-- Todo --*/
+                    final byte[] rxBytes = characteristic.getValue();
+                    String btData = new String(rxBytes);
+                    parseBTData(btData);
                 }
             }
         };
@@ -764,7 +961,7 @@ public class MainActivity extends AppCompatActivity
         // selectively disable BLE-related features.
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, "Bluetooth not supported. Alive sensing won't work!!", Toast.LENGTH_SHORT).show();
-            BLEConnected = false;
+            return false;
         }
 
         // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
@@ -776,17 +973,16 @@ public class MainActivity extends AppCompatActivity
         // Checks if Bluetooth is supported on the device.
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, "BLe not supported. Alive sensing won't work!!", Toast.LENGTH_SHORT).show();
-            BLEConnected = false;
-            return;
+            return false;
         }
 
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
         if (!mBluetoothAdapter.isEnabled()) {
-            if (!mBluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            if (BLEConnected == false)
+                return false;
         }
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -795,6 +991,62 @@ public class MainActivity extends AppCompatActivity
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(DeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
+            return result;
+        }
+        return false;
+    }
+
+    private void parseBTData(String load) {
+        char payload = load.charAt(0);
+        if (payload=='N') {
+            BULB_STATE = "TL_OFF";
+            home_bulb_image.setImageResource(R.drawable.bulb_off);
+            changeFanSpeed(0, false);
+        } else if (payload== 'O') {
+            BULB_STATE = "TL_OFF";
+            home_bulb_image.setImageResource(R.drawable.bulb_off);
+            changeFanSpeed(1, false);
+        } else if (payload== 'P')  {
+            BULB_STATE = "TL_OFF";
+            home_bulb_image.setImageResource(R.drawable.bulb_off);
+            changeFanSpeed(2, false);
+        } else if  (payload== 'Q')  {
+            BULB_STATE = "TL_OFF";
+            home_bulb_image.setImageResource(R.drawable.bulb_off);
+            changeFanSpeed(3, false);
+        } else if  (payload== 'R')  {
+            BULB_STATE = "TL_OFF";
+            home_bulb_image.setImageResource(R.drawable.bulb_off);
+            changeFanSpeed(4, false);
+        } else if  (payload== 'S')  {
+            BULB_STATE = "TL_OFF";
+            home_bulb_image.setImageResource(R.drawable.bulb_off);
+            changeFanSpeed(5, false);
+        } else if  (payload== 'T')  {
+            BULB_STATE = "TL_ON";
+            home_bulb_image.setImageResource(R.drawable.bulb_on);
+            FAN_STATE = "FAN_OFF";
+            changeFanSpeed(0, false);
+        } else if  (payload== 'U')  {
+            BULB_STATE = "TL_ON";
+            home_bulb_image.setImageResource(R.drawable.bulb_on);
+            changeFanSpeed(1, false);
+        } else if  (payload== 'V')  {
+            BULB_STATE = "TL_ON";
+            home_bulb_image.setImageResource(R.drawable.bulb_on);
+            changeFanSpeed(2, false);
+        } else if (payload=='W') {
+            BULB_STATE = "TL_ON";
+            home_bulb_image.setImageResource(R.drawable.bulb_on);
+            changeFanSpeed(3, false);
+        } else if (payload == 'X') {
+            BULB_STATE = "TL_ON";
+            home_bulb_image.setImageResource(R.drawable.bulb_on);
+            changeFanSpeed(4, false);
+        } else if (payload=='Y') {
+            BULB_STATE = "TL_ON";
+            home_bulb_image.setImageResource(R.drawable.bulb_on);
+            changeFanSpeed(5, false);
         }
     }
 
@@ -812,10 +1064,21 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
 // User chose not to enable Bluetooth.
         if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
-            Toast.makeText(this, "Bluetooth turned off? Alive sensing won't be avaliable...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Bluetooth turned off. Alive sensing won't be avaliable...", Toast.LENGTH_SHORT).show();
+            BLEConnected = false;
             return;
         }
     }
+
+    private void sendSerialBLE(String message) {
+        Log.d(TAG, "Sending: " + message);
+        final byte[] tx = message.getBytes();
+        if (BLEConnected == true) {
+            characteristic.setValue(tx);
+            mBluetoothLeService.writeCharacteristic(characteristic);
+        } // if
+    }
+
 //        else if (requestCode == REQ_SPEECH_CODE && resultCode == RESULT_OK && data != null) {
 //            ArrayList<String> result = data
 //                    .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
