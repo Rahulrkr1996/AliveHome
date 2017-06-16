@@ -5,7 +5,6 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,9 +16,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
-import android.speech.RecognizerIntent;
-import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -45,8 +41,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Random;
 
 import javax.crypto.BadPaddingException;
@@ -692,6 +686,14 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(this, "Use Home Button to exit!!", Toast.LENGTH_SHORT).show();
             }
             backPressedCount++;
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (BLEConnected == false) {
+            BLEConnected = connectBluetooth(mDeviceAddress);
         }
     }
 
